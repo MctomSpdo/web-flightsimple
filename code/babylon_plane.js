@@ -14,31 +14,72 @@ class PFD {
 
     constructor(canvasElement) {
         this.canvas = canvasElement;
-        this.ctx = this.canvas.getContext("2d");
 
-        this.canvas.height = canvas.getBoundingClientRect().height;
+        this.canvas.height = canvas.getBoundingClientRect().height * 2;
         this.canvas.width = canvas.getBoundingClientRect().width;
         this.width = this.canvas.width;
         this.height = this.canvas.height;
+        this.ctx = this.canvas.getContext("2d");
     }
 
     render() {
-        this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+        this.#renderHorizon();
         this.#renderHeader();
         this.#renderBody();
     }
 
+    #renderHorizon() {
+        //background:
+        this.ctx.beginPath();
+        this.ctx.fillStyle = '#11aed1';
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        this.ctx.fill();
+
+        
+        this.ctx.fillStyle = '#488000';
+        this.ctx.lineWidth = 0;
+
+        //calculate offset
+        let offset = this.#getHorizonPixelLevel(this.height, this.bank);
+
+        if(offset == Infinity) {
+            offset = 9999999999999;
+        }
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, this.height * 0.5 - offset);
+        this.ctx.lineTo(this.width, this.height * 0.5 + offset);
+        this.ctx.lineTo(this.width, this.height);
+        this.ctx.lineTo(0, this.height);
+        this.ctx.lineTo(0, this.height * 0.5 - offset)
+
+        this.ctx.stroke();
+        this.ctx.fill();
+
+        //black overlay:
+        this.ctx.beginPath();
+        this.ctx.fillStyle = '#000';
+        this.ctx.arc(this.width * 0.5, this.height * 0.5, this.height * 0.3 , 0, 2 * Math.PI);
+        this.ctx.rect(this.width, 0, -this.width, this.height);
+        this.ctx.fill();
+
+        this.ctx.beginPath();
+        this.ctx.rect(0, 0, this.width * 0.20, this.height);
+        this.ctx.rect(this.width * 0.8, 0, this.width * 0.2, this.height);
+        this.ctx.fill();
+    }
+
     #renderHeader() {
+        this.ctx.beginPath();
         this.ctx.strokeStyle = '#ffffff';
         this.ctx.fillStyle = '#ffffff';
         this.ctx.textAlign = "center";
-        this.ctx.font = "50px Calibri"
+        this.ctx.font = "70px Calibri"
 
         //section lines:
         let lineSep = this.width / 5;
         let lineHeight = this.height / 8;
 
-        this.ctx.beginPath();
         this.ctx.lineWidth = 4;
         this.ctx.moveTo(lineSep, 0);
         this.ctx.lineTo(lineSep, lineHeight);
@@ -51,7 +92,6 @@ class PFD {
 
         this.ctx.moveTo(lineSep * 4, 0)
         this.ctx.lineTo(lineSep * 4, lineHeight);
-        this.ctx.stroke();
 
         //text:
         let renderHeight = this.height * 0.05;
@@ -70,29 +110,30 @@ class PFD {
         this.ctx.fillText(this.heading, lineSep * 2.5, renderHeight);
         this.ctx.fillText(this.bank, lineSep * 3.5, renderHeight);
         this.ctx.fillText(this.autopilot, lineSep * 4.5, renderHeight);
+        this.ctx.stroke();
     }
 
     #renderBody() {
         this.#renderLeftBody();
         this.#renderRightBody();
+        this.#renderMiddleBody();
     }
 
     #renderLeftBody() {
+        this.ctx.beginPath();
         this.strokeStyle = '#fff';
         this.ctx.fillStyle = '#808080';
         this.ctx.lineWidth = 6;
 
         //primary rect:
-        this.ctx.fillRect(this.width * 0.02, this.height * 0.28, this.width * 0.10, this.height * 0.5);
-        this.ctx.rect(this.width * 0.02, this.height * 0.28, this.width * 0.10, this.height * 0.5);
+        this.ctx.fillRect(this.width * 0.02, this.height * 0.20, this.width * 0.10, this.height * 0.6);
+        this.ctx.rect(this.width * 0.02, this.height * 0.20, this.width * 0.10, this.height * 0.6);
 
         //litte markings at top and bottom of primary rect:
-        this.ctx.moveTo(this.width * 0.10, this.height * 0.28)
-        this.ctx.lineTo(this.width * 0.15, this.height * 0.28);
-        this.ctx.moveTo(this.width * 0.10, this.height * 0.78);
-        this.ctx.lineTo(this.width * 0.15, this.height * 0.78);
-        
-        
+        this.ctx.moveTo(this.width * 0.10, this.height * 0.20)
+        this.ctx.lineTo(this.width * 0.15, this.height * 0.20);
+        this.ctx.moveTo(this.width * 0.10, this.height * 0.80);
+        this.ctx.lineTo(this.width * 0.15, this.height * 0.80);
         this.ctx.stroke();
     }
 
@@ -107,25 +148,29 @@ class PFD {
         this.ctx.lineWidth = 6;
 
         //litte markings at top and bottom of primary rect:
-        this.ctx.fillRect(this.width * 0.86, this.height * 0.28, this.width * 0.12, this.height * 0.5);
-        this.ctx.rect(this.width * 0.86, this.height * 0.28, this.width * 0.12, this.height * 0.5);
+        this.ctx.fillRect(this.width * 0.88, this.height * 0.20, this.width * 0.10, this.height * 0.6);
+        this.ctx.rect(this.width * 0.88, this.height * 0.20, this.width * 0.10, this.height * 0.6);
 
-
+        this.ctx.moveTo(this.width * 0.88, this.height * 0.20);
+        this.ctx.lineTo(this.width * 0.85, this.height * 0.20);
+        this.ctx.moveTo(this.width * 0.88, this.height * 0.80);
+        this.ctx.lineTo(this.width * 0.85, this.height * 0.80);
         this.ctx.stroke();
     }
 
     #renderMiddleBody() {
-        this.strokeStyle = '#fff';
-        this.ctx.fillStyle = '#808080';
-        this.ctx.lineWidth = 6;
+
+    }
+
+    #getHorizonPixelLevel(width, angle) {
+        let alpha = 90 - angle;
+        let a = width / 2;
+        return a / Math.tan(alpha * Math.PI / 180);
     }
 }
 
 const canvas = document.getElementById("renderCanvas"); // Get the canvas element
 const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
-
-let pfd = new PFD(document.getElementById('PFD-js'));
-pfd.render();
 
 class Warning {
     audio
@@ -481,6 +526,9 @@ function checkAlarm() {
         warnings.bankangle.disable();
     }
 }
+
+let pfd = new PFD(document.getElementById('PFD-js'));
+pfd.render();
 
 
 

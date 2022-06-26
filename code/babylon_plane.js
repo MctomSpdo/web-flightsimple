@@ -7,13 +7,22 @@ let rightArrow = false;
 let upArrow = false;
 let downArrow = false;
 
-let plane_rotate_up = 0;
-let plane_rotate_side = 0;
-let plane_animate_side = 0;
-
-
 let plane;
 let speed = 1.0;
+
+//current plane movement multiplier:
+let plane_bank = 0;
+let plane_rotate_side = 0;
+let plane_pitch = 0;
+
+
+const STEERING_BANK = 0.02;
+const STEERING_PITCH = 0.01;
+
+const DRAG = 0.95;
+
+let airspeed = 2.0;
+let engine_power = 0.5;
 
 
 function createScene() {
@@ -26,7 +35,7 @@ function createScene() {
     let camera = new BABYLON.FollowCamera("FollowCam", new BABYLON.Vector3(0, 5, 30), scene);
 	
 	//The goal distance of camera from target
-	camera.radius = 0.1;
+	camera.radius = 0.15;
 	
 	// The goal height of camera above local origin (centre) of target
 	camera.heightOffset = 2;
@@ -35,10 +44,10 @@ function createScene() {
 	camera.rotationOffset = 180;
 	
 	//Acceleration of camera in moving from current to goal position
-	camera.cameraAcceleration = 0.005
+	camera.cameraAcceleration = 0.025;
 	
 	//The speed at which acceleration is halted 
-	camera.maxCameraSpeed = 10
+	camera.maxCameraSpeed = 10;
 	
     //camera.attachControl(canvas, true);
 
@@ -112,23 +121,39 @@ engine.runRenderLoop(function () {
 
     /* keyboard game loop */
     if(leftArrow) {
-        
+        plane_bank -= STEERING_BANK;
     }
     if(rightArrow) {
-        
+        plane_bank += STEERING_BANK;
     }
     if(upArrow) {
-        
+        plane_pitch -= STEERING_PITCH;
     }
     if(downArrow) {
-        
+        plane_pitch += STEERING_PITCH;
     }
+
+    plane_rotate_side += plane_bank * 0.008;
+
+    //slow down airspeed by default:
+    airspeed *= DRAG;
+
+    //engine power:
+    if(airspeed < 3) {
+        airspeed = airspeed + engine_power;
+        if(airspeed > 3) {
+            airspeed = 3;
+        }
+    }
+
+    //up and down movement:
+    airspeed -= plane_pitch;
 
 
     /* fly forward */
     if (plane) {
-        plane.rotation = new BABYLON.Vector3(plane_rotate_up, plane_rotate_side, plane_animate_side);
-        plane.movePOV(0,0,speed*0.1);
+        plane.rotation = new BABYLON.Vector3(plane_pitch, plane_rotate_side, plane_bank);
+        plane.movePOV(0,0,airspeed*0.1);
     }
     
     scene.render();

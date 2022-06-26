@@ -4,6 +4,52 @@ const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engi
 let PFD = new Object();
 PFD.altDisplay = document.getElementById("PFD-alt-value");
 PFD.speedDisplay = document.getElementById("PFD-speed-value");
+PFD.headingDisplay = document.getElementById("PFD-heading-value");
+PFD.angleDisplay = document.getElementById('PFD-ang-value');
+
+class Warning {
+    audio
+    active
+    
+    constructor(path) {
+        this.audio = new Audio(path);
+        //loop audio
+        if(typeof this.audio.loop == 'boolean') {
+            this.audio.loop = true;
+        } else {
+            this.audio.addEventListener('ended', () => {
+                this.currentTime = 0;
+                this.play();
+            }, false);
+        }
+
+        //set to inactive
+        this.active = false;
+    }
+
+    enable() {
+        if(!this.active) {
+            this.audio.play();
+            this.active = true;
+        }
+    }
+
+    disable() {
+        if(this.audio) {
+            this.audio.pause();
+            this.audio.currentTime = 0;
+            this.active = false;
+        }
+    }
+}
+
+let warnings = new Object();
+//speed warning:
+warnings.speed = new Warning('./files/audio/warning_speed.mp3');
+warnings.overspeed = new Warning('./files/audio/warning_overspeed.mp3');
+warnings.terrain = new Warning('./files/audio/warning_terrain.mp3');
+warnings.bankangle = new Warning('./files/audio/warning_bankangle.mp3');
+warnings.stall = new Warning('./files/audio/warning_stall.mp3');
 
 
 let leftArrow = false;
@@ -28,14 +74,22 @@ let airspeed = 1.0;
 let airspeedMPH = 150;
 let engine_power = 0.5;
 
+let heading = 0;
+let angle = 0;
+let altitude = 0;
+
 let touchdown = false;
+
+//stall
+let stall = false;
+let stallFall = 0;
+const STALLCONTROLDISABLER = 15;
 
 
 function createScene() {
     
     // Scene and Camera
     let scene = new BABYLON.Scene(engine);
-
 
     // This creates and initially positions a follow camera 	
     let camera = new BABYLON.FollowCamera("FollowCam", new BABYLON.Vector3(0, 5, 30), scene);
@@ -75,7 +129,7 @@ function createScene() {
         //Scale the model    
         plane.scaling.scaleInPlace(5);
         plane.position.z = -15;
-        plane.position.y = 10;
+        plane.position.y = 50;
 
         const planeAnim_idle = scene.getAnimationGroupByName("idle");
         planeAnim_idle.stop();
@@ -92,6 +146,7 @@ function createScene() {
 
 
     let ground = BABYLON.Mesh.CreateGround("ground1", 2000, 2000, 0, scene);
+    ground.checkCollisions = true;
 
     for (let index = -50; index < 50; index++) {
         let sphere;
@@ -100,7 +155,8 @@ function createScene() {
         sphere.position.z = 20*index;
         let groundMaterial = new BABYLON.StandardMaterial("Ground Material", scene);
         sphere.material = groundMaterial;
-        sphere.material.diffuseColor = BABYLON.Color3.Yellow();   
+        sphere.material.diffuseColor = BABYLON.Color3.Yellow();  
+        sphere.checkCollisions = true;
     }
     for (let index = -50; index < 50; index++) {
         let sphere;
@@ -111,10 +167,8 @@ function createScene() {
         sphere.material = groundMaterial;
         sphere.material.diffuseColor = BABYLON.Color3.Red();   
     }
-    
 
     return scene;
-
 };
 
 
@@ -128,35 +182,77 @@ engine.runRenderLoop(function () {
     //calculte numbers:
     airspeedMPH = (airspeed / 3) * 150;
 
-    /* keyboard game loop */
-    if(leftArrow) {
-        plane_bank -= STEERING_BANK;
-    }
-    if(rightArrow) {
-        plane_bank += STEERING_BANK;
-    }
-    if(upArrow) {
-        plane_pitch -= STEERING_PITCH;
-    }
-    if(downArrow) {
-        plane_pitch += STEERING_PITCH;
+    
+
+    if(plane) {
+        heading = (Math.abs(plane.rotation.y % 6) / 6) * 360;
+        angle = ((plane.rotation.z % 6) / 6) * 360;
+        altitude = plane.position.y;
+
+        //stall caluclation:
+        if(airspeedMPH < 28) {
+            stall = true;
+            stallFall += 0.001;
+            if(stallFall > 0.5) {
+                stallFall = 0.5;
+            }
+            plane.position.y -= stallFall;
+        } else if (stall) {
+            stallFall = 0;
+            stall = false;
+        }
     }
 
-    plane_rotate_side += plane_bank * 0.008;
+    /* keyboard game loop */
+    if(leftArrow && angle > -90) {
+        if(stall) {
+            plane_bank -= STEERING_BANK / STALLCONTROLDISABLER;
+        } else {
+            plane_bank -= STEERING_BANK;
+        }
+    }
+    if(rightArrow && angle < 90) {
+        if(stall) {
+            plane_bank += STEERING_BANK / STALLCONTROLDISABLER;
+        } else {
+            plane_bank += STEERING_BANK;
+        }   
+    }
+    if(upArrow) {
+        if(stall) {
+            plane_pitch -= STEERING_PITCH / STALLCONTROLDISABLER;
+        } else {
+            plane_pitch -= STEERING_PITCH;
+        }
+        
+    }
+    if(downArrow) {
+        if(stall) {
+            plane_pitch += STEERING_PITCH / STALLCONTROLDISABLER;
+        } else {
+            plane_pitch += STEERING_PITCH;
+        }
+        
+    }
 
     //slow down airspeed by default:
     airspeed *= DRAG;
 
+    
+
+    //calculate rotation:
+    plane_rotate_side += plane_bank * 0.008;
+
     //engine power:
     if(airspeed < 3) {
-        airspeed = airspeed + engine_power;
+        airspeed = airspeed + engine_power / 2.5;
         if(airspeed > 3) {
             airspeed = 3;
         }
     }
 
     //up and down movement:
-    airspeed -= plane_pitch;
+    airspeed -= plane_pitch / 2;
 
     if(airspeed < 0) {
         airspeed = 0;
@@ -167,10 +263,11 @@ engine.runRenderLoop(function () {
     if (plane) {
         plane.rotation = new BABYLON.Vector3(plane_pitch, plane_rotate_side, plane_bank);
         plane.movePOV(0,0,airspeed*0.1);
+        
 
         
         updatePFD();
-        checkAlarm();
+        checkAlarm();        
     }
     
     scene.render();
@@ -189,11 +286,39 @@ window.addEventListener("resize", function () {
 function updatePFD() {
     PFD.altDisplay.innerHTML = Math.round(plane._position._y);
     PFD.speedDisplay.innerHTML = Math.round(airspeedMPH);
+    PFD.headingDisplay.innerHTML = Math.round(heading);
+    PFD.angleDisplay.innerHTML = Math.round(angle);
 }
 
 function checkAlarm() {
-    if(airspeedMPH < 50) {
-        console.log("SPEED");
+    if(stall) {
+        warnings.stall.enable();
+    } else {
+        warnings.stall.disable();
+    }
+
+    if(airspeedMPH < 70 && !stall) {
+        warnings.speed.enable();
+    } else {
+        warnings.speed.disable();
+    }
+
+    if(airspeedMPH > 200) {
+        warnings.overspeed.enable();
+    } else {
+        warnings.overspeed.disable();
+    }
+
+    if(altitude < 30) {
+        warnings.terrain.enable();
+    } else {
+        warnings.terrain.disable();
+    }
+
+    if(angle > 45 || angle < -45) {
+        warnings.bankangle.enable();
+    } else {
+        warnings.bankangle.disable();
     }
 }
 

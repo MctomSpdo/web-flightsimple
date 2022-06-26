@@ -1,6 +1,10 @@
 const canvas = document.getElementById("renderCanvas"); // Get the canvas element
 const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
 
+let PFD = new Object();
+PFD.altDisplay = document.getElementById("PFD-alt-value");
+PFD.speedDisplay = document.getElementById("PFD-speed-value");
+
 
 let leftArrow = false;
 let rightArrow = false;
@@ -8,7 +12,6 @@ let upArrow = false;
 let downArrow = false;
 
 let plane;
-let speed = 1.0;
 
 //current plane movement multiplier:
 let plane_bank = 0;
@@ -21,8 +24,11 @@ const STEERING_PITCH = 0.01;
 
 const DRAG = 0.95;
 
-let airspeed = 2.0;
+let airspeed = 1.0;
+let airspeedMPH = 150;
 let engine_power = 0.5;
+
+let touchdown = false;
 
 
 function createScene() {
@@ -119,6 +125,9 @@ const scene = createScene(); //Call the createScene function
 // Register a render loop to repeatedly render the scene
 engine.runRenderLoop(function () {
 
+    //calculte numbers:
+    airspeedMPH = (airspeed / 3) * 150;
+
     /* keyboard game loop */
     if(leftArrow) {
         plane_bank -= STEERING_BANK;
@@ -149,11 +158,19 @@ engine.runRenderLoop(function () {
     //up and down movement:
     airspeed -= plane_pitch;
 
+    if(airspeed < 0) {
+        airspeed = 0;
+    }
+
 
     /* fly forward */
     if (plane) {
         plane.rotation = new BABYLON.Vector3(plane_pitch, plane_rotate_side, plane_bank);
         plane.movePOV(0,0,airspeed*0.1);
+
+        
+        updatePFD();
+        checkAlarm();
     }
     
     scene.render();
@@ -166,7 +183,19 @@ window.addEventListener("resize", function () {
     engine.resize();
 });
 
+/**
+ * Updates the Primary flight display on the GUI
+ */
+function updatePFD() {
+    PFD.altDisplay.innerHTML = Math.round(plane._position._y);
+    PFD.speedDisplay.innerHTML = Math.round(airspeedMPH);
+}
 
+function checkAlarm() {
+    if(airspeedMPH < 50) {
+        console.log("SPEED");
+    }
+}
 
 
 

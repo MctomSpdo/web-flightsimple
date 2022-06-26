@@ -1,0 +1,74 @@
+* {
+    font-family: calibri;
+}
+
+html, body {
+    overflow: hidden;
+    width: 100vw;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 80% 20%;
+}
+
+#renderCanvas {
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+
+/** FLIGHT PANNELS **/
+
+#flight-panels {
+    width: 100%;
+    height: 100%;
+}
+
+#flight-panels > h1 {
+    text-align: center;
+}
+
+/** PRIMARY FLIGHT DISPLAY **/
+
+.PFD {
+    width: 100%;
+    height: 40vh;
+    background-color: black;
+    display: grid;
+    grid-template-rows: 15% 70% 15%;
+    color: #fff;
+}
+
+.PFD-header {
+    display: grid;
+    grid-template-columns: 20% 20% 20% 20% 20%;
+    margin-top: 0.2vh;
+}
+
+.PFD-header > div {
+    border-right: solid #fff 0.1vw;
+    padding-top: 0.2vh;
+}
+
+.PFD-header > div:nth-last-child() {
+    border-right: none;
+}
+
+.PFD-header h2 {
+    margin: 0;
+    padding: 0;
+    font-size: 1.8vh;
+    font-weight: normal;
+    text-align: center;
+}
+
+.PFD-header p {
+    text-align: center;
+    color: rgb(88, 130, 243);
+}
+
+.PFD-body {
+    display: grid; 
+    grid-template-columns: 10% 80% 10%;
+}

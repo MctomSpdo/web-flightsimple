@@ -43,6 +43,37 @@ class Warning {
     }
 }
 
+class Engine {
+    power_input = 0.5
+    active_power = 0.5
+
+    calculate() {
+        if(this.power_input > this.active_power) {
+            this.active_power += 0.05;
+        } else if(this.power_input < this.active_power) {
+            this.active_power -= 0.05;
+        }
+    }
+
+    powerUp() {
+        this.power_input += 0.005;
+        if(this.power_input > 1) {
+            this.power_input = 1;
+        }
+    }
+
+    powerDown() {
+        this.power_input -= 0.005;
+        if(this.power_input < 0) {
+            this.power_input = 0;
+        }
+    }
+
+    getPower() {
+        return this.active_power;
+    }
+}
+
 let warnings = new Object();
 //speed warning:
 warnings.speed = new Warning('./files/audio/warning_speed.mp3');
@@ -56,6 +87,8 @@ let leftArrow = false;
 let rightArrow = false;
 let upArrow = false;
 let downArrow = false;
+let engine_up = false;
+let engine_down = false;
 
 let plane;
 
@@ -68,11 +101,12 @@ let plane_pitch = 0;
 const STEERING_BANK = 0.02;
 const STEERING_PITCH = 0.01;
 
-const DRAG = 0.95;
+const DRAG = 0.995;
 
-let airspeed = 1.0;
+let airspeed = 2.0;
 let airspeedMPH = 150;
-let engine_power = 0.5;
+
+let plane_engine = new Engine();
 
 let heading = 0;
 let angle = 0;
@@ -83,7 +117,7 @@ let touchdown = false;
 //stall
 let stall = false;
 let stallFall = 0;
-const STALLCONTROLDISABLER = 15;
+const STALLCONTROLDISABLER = 50;
 
 
 function createScene() {
@@ -234,25 +268,33 @@ engine.runRenderLoop(function () {
         }
         
     }
+    if(engine_up) {
+        plane_engine.powerUp();
+    }
+    if(engine_down) {
+        plane_engine.powerDown();
+    }
 
     //slow down airspeed by default:
     airspeed *= DRAG;
 
-    
+    console.log(plane_engine.getPower());
 
     //calculate rotation:
     plane_rotate_side += plane_bank * 0.008;
 
     //engine power:
-    if(airspeed < 3) {
-        airspeed = airspeed + engine_power / 2.5;
-        if(airspeed > 3) {
-            airspeed = 3;
-        }
+    if(airspeed < 5) {
+        airspeed += plane_engine.getPower() * 0.025;
     }
 
     //up and down movement:
-    airspeed -= plane_pitch / 2;
+    if(plane_pitch < 0) {
+        airspeed -= plane_pitch * 0.06;
+    } else if(plane_pitch > 0) {
+        airspeed -= plane_pitch* 0.01;
+    }
+    
 
     if(airspeed < 0) {
         airspeed = 0;
@@ -264,10 +306,12 @@ engine.runRenderLoop(function () {
         plane.rotation = new BABYLON.Vector3(plane_pitch, plane_rotate_side, plane_bank);
         plane.movePOV(0,0,airspeed*0.1);
         
+        //flight
+        plane_engine.calculate();
 
-        
+        //display
         updatePFD();
-        checkAlarm();        
+        checkAlarm(); 
     }
     
     scene.render();
@@ -338,32 +382,43 @@ document.onkeyup = keyListenerUp;
 
 /* CHECK PRESSED KEY */
 function keyListenerDown(e){
-    if (e.keyCode == 37){ // leftArrow
+    if (e.keyCode == 37 || e.keyCode == 65){ // leftArrow
         leftArrow = true;
     }
-    if (e.keyCode == 38){ //upArrow
+    if (e.keyCode == 38 || e.keyCode == 87){ //upArrow
         upArrow = true;
     }
-    if (e.keyCode == 39){ // rightArrow
+    if (e.keyCode == 39 || e.keyCode == 68){ // rightArrow
         rightArrow = true;
     }
-    if (e.keyCode == 40){ // downArrow
+    if (e.keyCode == 40 || e.keyCode == 83){ // downArrow
         downArrow = true;
+    }
+    if(e.keyCode == 82) {
+        engine_up = true;
+    }
+    if(e.keyCode == 70) {
+        engine_down = true;
     }
 }
 /* CHECK RELEASED KEY */
 function keyListenerUp(e){
-    if (e.keyCode == 37){ // leftArrow
+    if (e.keyCode == 37 || e.keyCode == 65){ // leftArrow
         leftArrow = false;
     }
-    if (e.keyCode == 38){ //upArrow
+    if (e.keyCode == 38 || e.keyCode == 87){ //upArrow
         upArrow = false;
     }
-    if (e.keyCode == 39){ // rightArrow
+    if (e.keyCode == 39 || e.keyCode == 68){ // rightArrow
         rightArrow = false;
     }
-    if (e.keyCode == 40){ // downArrow
+    if (e.keyCode == 40 || e.keyCode == 83){ // downArrow
         downArrow = false;
     }
-
+    if(e.keyCode == 82) {
+        engine_up = false;
+    }
+    if(e.keyCode == 70) {
+        engine_down = false;
+    }
 }

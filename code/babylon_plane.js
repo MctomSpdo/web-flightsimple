@@ -1,11 +1,131 @@
+
+class PFD {
+    canvas
+    ctx
+
+    height
+    width
+
+    airspeed = 'ERR'
+    altitude = 'ERR'
+    heading = 'ERR'
+    autopilot = 'N/A'
+    bank = "ERR"
+
+    constructor(canvasElement) {
+        this.canvas = canvasElement;
+        this.ctx = this.canvas.getContext("2d");
+
+        this.canvas.height = canvas.getBoundingClientRect().height;
+        this.canvas.width = canvas.getBoundingClientRect().width;
+        this.width = this.canvas.width;
+        this.height = this.canvas.height;
+    }
+
+    render() {
+        this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+        this.#renderHeader();
+        this.#renderBody();
+    }
+
+    #renderHeader() {
+        this.ctx.strokeStyle = '#ffffff';
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.textAlign = "center";
+        this.ctx.font = "50px Calibri"
+
+        //section lines:
+        let lineSep = this.width / 5;
+        let lineHeight = this.height / 8;
+
+        this.ctx.beginPath();
+        this.ctx.lineWidth = 4;
+        this.ctx.moveTo(lineSep, 0);
+        this.ctx.lineTo(lineSep, lineHeight);
+
+        this.ctx.moveTo(lineSep * 2, 0);
+        this.ctx.lineTo(lineSep * 2, lineHeight);
+
+        this.ctx.moveTo(lineSep * 3, 0)
+        this.ctx.lineTo(lineSep * 3, lineHeight);
+
+        this.ctx.moveTo(lineSep * 4, 0)
+        this.ctx.lineTo(lineSep * 4, lineHeight);
+        this.ctx.stroke();
+
+        //text:
+        let renderHeight = this.height * 0.05;
+
+        this.ctx.fillText("S P E E D", lineSep * 0.5, renderHeight);
+        this.ctx.fillText("A L T", lineSep * 1.5, renderHeight);
+        this.ctx.fillText("H D G", lineSep * 2.5, renderHeight);
+        this.ctx.fillText("B A N K", lineSep * 3.5, renderHeight);
+        this.ctx.fillText("A P", lineSep * 4.5, renderHeight);
+
+        //values:
+        renderHeight = this.height * 0.1;
+        this.ctx.fillStyle = "#5882f3";
+        this.ctx.fillText(this.airspeed, lineSep * 0.5, renderHeight);
+        this.ctx.fillText(this.altitude, lineSep * 1.5, renderHeight);
+        this.ctx.fillText(this.heading, lineSep * 2.5, renderHeight);
+        this.ctx.fillText(this.bank, lineSep * 3.5, renderHeight);
+        this.ctx.fillText(this.autopilot, lineSep * 4.5, renderHeight);
+    }
+
+    #renderBody() {
+        this.#renderLeftBody();
+        this.#renderRightBody();
+    }
+
+    #renderLeftBody() {
+        this.strokeStyle = '#fff';
+        this.ctx.fillStyle = '#808080';
+        this.ctx.lineWidth = 6;
+
+        //primary rect:
+        this.ctx.fillRect(this.width * 0.02, this.height * 0.28, this.width * 0.10, this.height * 0.5);
+        this.ctx.rect(this.width * 0.02, this.height * 0.28, this.width * 0.10, this.height * 0.5);
+
+        //litte markings at top and bottom of primary rect:
+        this.ctx.moveTo(this.width * 0.10, this.height * 0.28)
+        this.ctx.lineTo(this.width * 0.15, this.height * 0.28);
+        this.ctx.moveTo(this.width * 0.10, this.height * 0.78);
+        this.ctx.lineTo(this.width * 0.15, this.height * 0.78);
+        
+        
+        this.ctx.stroke();
+    }
+
+    #renderRightBody() {
+        this.strokeStyle = '#fff';
+        this.ctx.fillStyle = '#808080';
+        this.ctx.lineWidth = 6;
+
+        //primary rect:
+        this.strokeStyle = '#fff';
+        this.ctx.fillStyle = '#808080';
+        this.ctx.lineWidth = 6;
+
+        //litte markings at top and bottom of primary rect:
+        this.ctx.fillRect(this.width * 0.86, this.height * 0.28, this.width * 0.12, this.height * 0.5);
+        this.ctx.rect(this.width * 0.86, this.height * 0.28, this.width * 0.12, this.height * 0.5);
+
+
+        this.ctx.stroke();
+    }
+
+    #renderMiddleBody() {
+        this.strokeStyle = '#fff';
+        this.ctx.fillStyle = '#808080';
+        this.ctx.lineWidth = 6;
+    }
+}
+
 const canvas = document.getElementById("renderCanvas"); // Get the canvas element
 const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
 
-let PFD = new Object();
-PFD.altDisplay = document.getElementById("PFD-alt-value");
-PFD.speedDisplay = document.getElementById("PFD-speed-value");
-PFD.headingDisplay = document.getElementById("PFD-heading-value");
-PFD.angleDisplay = document.getElementById('PFD-ang-value');
+let pfd = new PFD(document.getElementById('PFD-js'));
+pfd.render();
 
 class Warning {
     audio
@@ -278,8 +398,6 @@ engine.runRenderLoop(function () {
     //slow down airspeed by default:
     airspeed *= DRAG;
 
-    console.log(plane_engine.getPower());
-
     //calculate rotation:
     plane_rotate_side += plane_bank * 0.008;
 
@@ -324,14 +442,12 @@ window.addEventListener("resize", function () {
     engine.resize();
 });
 
-/**
- * Updates the Primary flight display on the GUI
- */
 function updatePFD() {
-    PFD.altDisplay.innerHTML = Math.round(plane._position._y);
-    PFD.speedDisplay.innerHTML = Math.round(airspeedMPH);
-    PFD.headingDisplay.innerHTML = Math.round(heading);
-    PFD.angleDisplay.innerHTML = Math.round(angle);
+    pfd.airspeed = Math.round(airspeedMPH);
+    pfd.altitude = Math.round(altitude);
+    pfd.heading = Math.round(heading);
+    pfd.bank = Math.round(angle);
+    pfd.render();
 }
 
 function checkAlarm() {

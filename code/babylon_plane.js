@@ -11,6 +11,7 @@ class PFD {
     heading = 'ERR'
     autopilot = 'N/A'
     bank = "ERR"
+    pitch = 'ERR'
 
     constructor(canvasElement) {
         this.canvas = canvasElement;
@@ -29,9 +30,14 @@ class PFD {
     }
 
     #renderHorizon() {
+        this.ctx.save();
+        let degHeight = (this.height *0.01) * this.pitch;
+
+
         //background:
-        this.ctx.beginPath();
+        this.ctx.strokeStyle = '#ffffff';
         this.ctx.fillStyle = '#11aed1';
+        this.ctx.beginPath();
         this.ctx.fillRect(0, 0, this.width, this.height);
         this.ctx.fill();
 
@@ -40,21 +46,100 @@ class PFD {
         this.ctx.lineWidth = 0;
 
         //calculate offset
-        let offset = this.#getHorizonPixelLevel(this.height, this.bank);
+        let offset = this.#getHorizonPixelLevel(this.width, this.bank);
 
         if(offset == Infinity) {
             offset = 9999999999999;
         }
 
+        let centerPos = this.height * 0.5 + degHeight;
+
         this.ctx.beginPath();
-        this.ctx.moveTo(0, this.height * 0.5 - offset);
-        this.ctx.lineTo(this.width, this.height * 0.5 + offset);
+        this.ctx.moveTo(0, centerPos - offset);
+        this.ctx.lineTo(this.width, centerPos + offset);
         this.ctx.lineTo(this.width, this.height);
         this.ctx.lineTo(0, this.height);
         this.ctx.lineTo(0, this.height * 0.5 - offset)
 
         this.ctx.stroke();
         this.ctx.fill();
+
+        this.ctx.fillStyle = '#fff';
+        //pitch lines:
+        let lineDistance = this.height * 0.03;
+        let tinyWidth = this.width * 0.1;
+        let smallWidth = this.width * 0.2;
+        let wideWith = this.width * 0.3;
+
+        let textHOffset = 25;
+        let textWOffset = 100;
+
+        //rotate everything by bank:
+        this.ctx.translate(this.width * 0.5, centerPos);
+        this.ctx.rotate(Math.round(this.bank * Math.PI / 2) * 0.011);
+
+        //0 - 10 deg lines:
+        this.ctx.moveTo(0 - tinyWidth * 0.5, 0 - lineDistance);
+        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 - lineDistance);
+        this.ctx.moveTo(0 - smallWidth * 0.5, 0 - lineDistance * 2);
+        this.ctx.lineTo(0 + smallWidth * 0.5, 0 - lineDistance * 2);
+        this.ctx.moveTo(0 - tinyWidth * 0.5, 0 - lineDistance * 3);
+        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 - lineDistance * 3);
+        this.ctx.moveTo(0 - wideWith * 0.5, 0 - lineDistance * 4);
+        this.ctx.lineTo(0 + wideWith * 0.5, 0 - lineDistance * 4);
+        this.ctx.fillText('10', 0 - wideWith * 0.5 - textWOffset, 0 - lineDistance * 4 + textHOffset);
+
+        //0 - 20 deg lines:
+        this.ctx.moveTo(0 - tinyWidth * 0.5, 0 - lineDistance * 5);
+        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 - lineDistance* 5);
+        this.ctx.moveTo(0 - smallWidth * 0.5, 0 - lineDistance * 6);
+        this.ctx.lineTo(0 + smallWidth * 0.5, 0 - lineDistance* 6);
+        this.ctx.moveTo(0 - tinyWidth * 0.5, 0 - lineDistance * 7);
+        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 - lineDistance* 7);
+        this.ctx.moveTo(0 - wideWith * 0.5, 0 - lineDistance * 8);
+        this.ctx.lineTo(0 + wideWith * 0.5, 0 - lineDistance* 8);
+        this.ctx.fillText('20', 0 - wideWith * 0.5 - textWOffset, 0 - lineDistance * 8 + textHOffset);
+
+        //20 - 25 deg lines:
+        this.ctx.moveTo(0 - tinyWidth * 0.5, 0 - lineDistance * 9);
+        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 - lineDistance * 9);
+        this.ctx.moveTo(this.width * -1, 0 - lineDistance * 10);
+        this.ctx.lineTo(this.width, 0  - lineDistance * 10);
+
+        //0 - -10 deg lines:
+        this.ctx.moveTo(0 - tinyWidth * 0.5, 0 + lineDistance);
+        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 + lineDistance);
+        this.ctx.moveTo(0 - smallWidth * 0.5, 0 + lineDistance * 2);
+        this.ctx.lineTo(0 + smallWidth * 0.5, 0 + lineDistance * 2);
+        this.ctx.moveTo(0 - tinyWidth * 0.5, 0 + lineDistance * 3);
+        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 + lineDistance * 3);
+        this.ctx.moveTo(0 - wideWith * 0.5, 0 + lineDistance * 4);
+        this.ctx.lineTo(0 + wideWith * 0.5, 0 + lineDistance * 4);
+        this.ctx.fillText('-10', 0 - wideWith * 0.5 - textWOffset, 0 + lineDistance * 4 + textHOffset);
+        
+
+        //-10 to -20 deg lines:
+        this.ctx.moveTo(0 - tinyWidth * 0.5, 0 + lineDistance * 5);
+        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 + lineDistance* 5);
+        this.ctx.moveTo(0 - smallWidth * 0.5, 0 + lineDistance * 6);
+        this.ctx.lineTo(0 + smallWidth * 0.5, 0 + lineDistance* 6);
+        this.ctx.moveTo(0 - tinyWidth * 0.5, 0 + lineDistance * 7);
+        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 + lineDistance* 7);
+        this.ctx.moveTo(0 - wideWith * 0.5, 0 + lineDistance * 8);
+        this.ctx.lineTo(0 + wideWith * 0.5, 0 + lineDistance* 8);
+        this.ctx.fillText('-20', 0 - wideWith * 0.5 - textWOffset, 0 + lineDistance * 8 + textHOffset);
+
+        //-20 to -25:
+        this.ctx.moveTo(0 - tinyWidth * 0.5, 0 + lineDistance * 9);
+        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 + lineDistance * 9);
+        this.ctx.moveTo(this.width * -1, 0 + lineDistance * 10);
+        this.ctx.lineTo(this.width, 0  + lineDistance * 10);
+
+        //draw:
+        this.ctx.stroke();
+
+        //restore angles:
+        this.ctx.restore();
 
         //black overlay:
         this.ctx.beginPath();
@@ -66,7 +151,7 @@ class PFD {
         this.ctx.beginPath();
         this.ctx.rect(0, 0, this.width * 0.20, this.height);
         this.ctx.rect(this.width * 0.8, 0, this.width * 0.2, this.height);
-        this.ctx.fill();
+        this.ctx.fill();        
     }
 
     #renderHeader() {
@@ -74,7 +159,7 @@ class PFD {
         this.ctx.strokeStyle = '#ffffff';
         this.ctx.fillStyle = '#ffffff';
         this.ctx.textAlign = "center";
-        this.ctx.font = "70px Calibri"
+        this.ctx.font = "60px Calibri"
 
         //section lines:
         let lineSep = this.width / 5;
@@ -159,7 +244,7 @@ class PFD {
     }
 
     #renderMiddleBody() {
-
+        
     }
 
     #getHorizonPixelLevel(width, angle) {
@@ -261,7 +346,7 @@ let plane;
 let plane_bank = 0;
 let plane_rotate_side = 0;
 let plane_pitch = 0;
-
+let plane_pitchDEG = 0;
 
 const STEERING_BANK = 0.02;
 const STEERING_PITCH = 0.01;
@@ -380,6 +465,7 @@ engine.runRenderLoop(function () {
 
     //calculte numbers:
     airspeedMPH = (airspeed / 3) * 150;
+    plane_pitchDEG = ((plane_pitch % 6) / 6) * 360
 
     
 
@@ -492,6 +578,7 @@ function updatePFD() {
     pfd.altitude = Math.round(altitude);
     pfd.heading = Math.round(heading);
     pfd.bank = Math.round(angle);
+    pfd.pitch = Math.round(plane_pitchDEG);
     pfd.render();
 }
 

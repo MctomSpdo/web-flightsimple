@@ -49,6 +49,8 @@ let downArrow = false;
 let engine_up = false;
 let engine_down = false;
 
+let keys = new Array(120);
+
 let plane;
 
 //current plane movement multiplier:
@@ -338,27 +340,21 @@ document.onkeyup = keyListenerUp;
 
 /* CHECK PRESSED KEY */
 function keyListenerDown(e){
-    if (e.keyCode == 37 || e.keyCode == 65){ // leftArrow
-        leftArrow = true;
+    if(e.keyCode >= 0 && e.keyCode < 120) {
+        keys[e.keyCode] = true;
     }
-    if (e.keyCode == 38 || e.keyCode == 87){ //upArrow
-        upArrow = true;
-    }
-    if (e.keyCode == 39 || e.keyCode == 68){ // rightArrow
-        rightArrow = true;
-    }
-    if (e.keyCode == 40 || e.keyCode == 83){ // downArrow
-        downArrow = true;
-    }
-    if(e.keyCode == 82) {
-        engine_up = true;
-    }
-    if(e.keyCode == 70) {
-        engine_down = true;
-    }
+    leftArrow = (e.keyCode == 37 || e.keyCode == 65);
+    upArrow = (e.keyCode == 38 || e.keyCode == 87);
+    rightArrow = (e.keyCode == 39 || e.keyCode == 68);
+    downArrow = (e.keyCode == 40 || e.keyCode == 83);
+    engine_up = (e.keyCode == 82);
+    engine_down = (e.keyCode == 70);
 }
 /* CHECK RELEASED KEY */
 function keyListenerUp(e){
+    if(e.keyCode >= 0 && e.keyCode < 120) {
+        keys[e.keyCode] = false;
+    }
     if (e.keyCode == 37 || e.keyCode == 65){ // leftArrow
         leftArrow = false;
     }

@@ -229,9 +229,6 @@ export default class PFD {
         this.ctx.fillStyle = '#fff';
         this.ctx.font = textHeight + 'px Calibri';
 
-
-        this.ctx.strokeRect(this.width / 2, scaleBeginnGraphic, 2, GUI_size);
-
         //put all levels to display into Array:
         let levels = new Array();
         levels.push(Math.ceil(this.airspeed / 10) * 10);

@@ -1,46 +1,11 @@
 import PFD from "./pfd.js";
+import WarningManager, {Warning} from "../warning.js";
 
 const canvas = document.getElementById("renderCanvas"); // Get the canvas element
 const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
 
 let pfd = new PFD(document.getElementById('PFD-js'));
 pfd.render();
-
-class Warning {
-    audio
-    active
-    
-    constructor(path) {
-        this.audio = new Audio(path);
-        //loop audio
-        if(typeof this.audio.loop == 'boolean') {
-            this.audio.loop = true;
-        } else {
-            this.audio.addEventListener('ended', () => {
-                this.currentTime = 0;
-                this.play();
-            }, false);
-        }
-
-        //set to inactive
-        this.active = false;
-    }
-
-    enable() {
-        if(!this.active) {
-            this.audio.play();
-            this.active = true;
-        }
-    }
-
-    disable() {
-        if(this.audio) {
-            this.audio.pause();
-            this.audio.currentTime = 0;
-            this.active = false;
-        }
-    }
-}
 
 class Engine {
     power_input = 0.5
@@ -73,13 +38,8 @@ class Engine {
     }
 }
 
-let warnings = new Object();
-//speed warning:
-warnings.speed = new Warning('./files/audio/warning_speed.mp3');
-warnings.overspeed = new Warning('./files/audio/warning_overspeed.mp3');
-warnings.terrain = new Warning('./files/audio/warning_terrain.mp3');
-warnings.bankangle = new Warning('./files/audio/warning_bankangle.mp3');
-warnings.stall = new Warning('./files/audio/warning_stall.mp3');
+let warnings = new WarningManager();
+warnings.addWarningsByName('speed', 'overspeed', 'terrain', 'bankangle', 'stall');
 
 
 let leftArrow = false;
@@ -332,33 +292,33 @@ function updatePFD() {
 
 function checkAlarm() {
     if(stall) {
-        warnings.stall.enable();
+        warnings.enableWarningByName('stall');
     } else {
-        warnings.stall.disable();
+        warnings.disableWarningByName('stall');
     }
 
     if(airspeedMPH < 70 && !stall) {
-        warnings.speed.enable();
+        warnings.enableWarningByName('speed');
     } else {
-        warnings.speed.disable();
+        warnings.disableWarningByName('speed');
     }
 
     if(airspeedMPH > 200) {
-        warnings.overspeed.enable();
+        warnings.enableWarningByName('overspeed');
     } else {
-        warnings.overspeed.disable();
+        warnings.disableWarningByName('overspeed');
     }
 
     if(altitude < 30) {
-        warnings.terrain.enable();
+        warnings.enableWarningByName('terrain');
     } else {
-        warnings.terrain.disable();
+        warnings.disableWarningByName('terrain');
     }
 
     if(angle > 45 || angle < -45) {
-        warnings.bankangle.enable();
+        warnings.enableWarningByName('bankangle');
     } else {
-        warnings.bankangle.disable();
+        warnings.disableWarningByName('bankangle');
     }
 }
 

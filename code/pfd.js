@@ -30,7 +30,7 @@ export default class PFD {
 
     #renderHorizon() {
         this.ctx.save();
-        let degHeight = (this.height *0.011538) * this.pitch;
+        let degHeight = (this.height * 0.011538) * this.pitch;
 
 
         //background:
@@ -40,14 +40,14 @@ export default class PFD {
         this.ctx.fillRect(0, 0, this.width, this.height);
         this.ctx.fill();
 
-        
+
         this.ctx.fillStyle = '#488000';
         this.ctx.lineWidth = 0;
 
         //calculate offset
         let offset = this.#getHorizonPixelLevel(this.width, this.bank);
 
-        if(offset == Infinity) {
+        if (offset == Infinity) {
             offset = 9999999999999;
         }
 
@@ -90,20 +90,20 @@ export default class PFD {
 
         //0 - 20 deg lines:
         this.ctx.moveTo(0 - tinyWidth * 0.5, 0 - lineDistance * 5);
-        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 - lineDistance* 5);
+        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 - lineDistance * 5);
         this.ctx.moveTo(0 - smallWidth * 0.5, 0 - lineDistance * 6);
-        this.ctx.lineTo(0 + smallWidth * 0.5, 0 - lineDistance* 6);
+        this.ctx.lineTo(0 + smallWidth * 0.5, 0 - lineDistance * 6);
         this.ctx.moveTo(0 - tinyWidth * 0.5, 0 - lineDistance * 7);
-        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 - lineDistance* 7);
+        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 - lineDistance * 7);
         this.ctx.moveTo(0 - wideWith * 0.5, 0 - lineDistance * 8);
-        this.ctx.lineTo(0 + wideWith * 0.5, 0 - lineDistance* 8);
+        this.ctx.lineTo(0 + wideWith * 0.5, 0 - lineDistance * 8);
         this.ctx.fillText('20', 0 - wideWith * 0.5 - textWOffset, 0 - lineDistance * 8 + textHOffset);
 
         //20 - 25 deg lines:
         this.ctx.moveTo(0 - tinyWidth * 0.5, 0 - lineDistance * 9);
         this.ctx.lineTo(0 + tinyWidth * 0.5, 0 - lineDistance * 9);
         this.ctx.moveTo(this.width * -1, 0 - lineDistance * 10);
-        this.ctx.lineTo(this.width, 0  - lineDistance * 10);
+        this.ctx.lineTo(this.width, 0 - lineDistance * 10);
 
         //0 - -10 deg lines:
         this.ctx.moveTo(0 - tinyWidth * 0.5, 0 + lineDistance);
@@ -115,24 +115,24 @@ export default class PFD {
         this.ctx.moveTo(0 - wideWith * 0.5, 0 + lineDistance * 4);
         this.ctx.lineTo(0 + wideWith * 0.5, 0 + lineDistance * 4);
         this.ctx.fillText('-10', 0 - wideWith * 0.5 - textWOffset, 0 + lineDistance * 4 + textHOffset);
-        
+
 
         //-10 to -20 deg lines:
         this.ctx.moveTo(0 - tinyWidth * 0.5, 0 + lineDistance * 5);
-        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 + lineDistance* 5);
+        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 + lineDistance * 5);
         this.ctx.moveTo(0 - smallWidth * 0.5, 0 + lineDistance * 6);
-        this.ctx.lineTo(0 + smallWidth * 0.5, 0 + lineDistance* 6);
+        this.ctx.lineTo(0 + smallWidth * 0.5, 0 + lineDistance * 6);
         this.ctx.moveTo(0 - tinyWidth * 0.5, 0 + lineDistance * 7);
-        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 + lineDistance* 7);
+        this.ctx.lineTo(0 + tinyWidth * 0.5, 0 + lineDistance * 7);
         this.ctx.moveTo(0 - wideWith * 0.5, 0 + lineDistance * 8);
-        this.ctx.lineTo(0 + wideWith * 0.5, 0 + lineDistance* 8);
+        this.ctx.lineTo(0 + wideWith * 0.5, 0 + lineDistance * 8);
         this.ctx.fillText('-20', 0 - wideWith * 0.5 - textWOffset, 0 + lineDistance * 8 + textHOffset);
 
         //-20 to -25:
         this.ctx.moveTo(0 - tinyWidth * 0.5, 0 + lineDistance * 9);
         this.ctx.lineTo(0 + tinyWidth * 0.5, 0 + lineDistance * 9);
         this.ctx.moveTo(this.width * -1, 0 + lineDistance * 10);
-        this.ctx.lineTo(this.width, 0  + lineDistance * 10);
+        this.ctx.lineTo(this.width, 0 + lineDistance * 10);
 
         //draw:
         this.ctx.stroke();
@@ -143,14 +143,14 @@ export default class PFD {
         //black overlay:
         this.ctx.beginPath();
         this.ctx.fillStyle = '#000';
-        this.ctx.arc(this.width * 0.5, this.height * 0.5, this.height * 0.3 , 0, 2 * Math.PI);
+        this.ctx.arc(this.width * 0.5, this.height * 0.5, this.height * 0.3, 0, 2 * Math.PI);
         this.ctx.rect(this.width, 0, -this.width, this.height);
         this.ctx.fill();
 
         this.ctx.beginPath();
         this.ctx.rect(0, 0, this.width * 0.20, this.height);
         this.ctx.rect(this.width * 0.8, 0, this.width * 0.2, this.height);
-        this.ctx.fill();        
+        this.ctx.fill();
     }
 
     #renderHeader() {
@@ -158,7 +158,7 @@ export default class PFD {
         this.ctx.strokeStyle = '#ffffff';
         this.ctx.fillStyle = '#ffffff';
         this.ctx.textAlign = "center";
-        this.ctx.font = "60px Calibri"
+        this.ctx.font = "60px Calibri";
 
         //section lines:
         let lineSep = this.width / 5;
@@ -221,29 +221,58 @@ export default class PFD {
         this.ctx.stroke();
 
         //scale:
-        let scaleBeginnGraphic = this.height * 0.2;
-        let scaleEndGraphic = this.height * 0.6;
+        const scaleBeginnGraphic = this.height * 0.2;
+        const GUI_size = this.height * 0.6;
+        const scaleEndGraphic = scaleBeginnGraphic + GUI_size;
+        const textHeight = this.height * 0.045;
+
+        this.ctx.fillStyle = '#fff';
+        this.ctx.font = textHeight + 'px Calibri';
+
+
+        this.ctx.strokeRect(this.width / 2, scaleBeginnGraphic, 2, GUI_size);
 
         //put all levels to display into Array:
         let levels = new Array();
         levels.push(Math.ceil(this.airspeed / 10) * 10);
+        levels.push(Math.ceil(this.airspeed / 10) * 10 - 5);
+        levels.push(Math.ceil(this.airspeed / 10) * 10 + 5);
         levels.push(Math.ceil(this.airspeed / 10) * 10 + 10);
+        levels.push(Math.ceil(this.airspeed / 10) * 10 + 15);
         levels.push(Math.floor(this.airspeed / 10) * 10);
-        levels.push(Math.floor(this.airspeed / 10) * 10 + 10);
+        levels.push(Math.floor(this.airspeed / 10) * 10 - 5);
+        levels.push(Math.floor(this.airspeed / 10) * 10 - 10);
+        levels.push(Math.floor(this.airspeed / 10) * 10 - 15);
 
-        this.ctx.beginPath();
+        
+
         levels.forEach((value) => {
             let difference = this.airspeed - value;
-            let differenceGUI = ((scaleEndGraphic - scaleBeginnGraphic) / 40) * difference;
-            //draw lines:
-            this.ctx.moveTo(this.width * 0.1, this.height * 0.5 + differenceGUI);
-            this.ctx.lineTo(this.width * 0.12, this.height * 0.5 + differenceGUI);
-        });
+            let differenceGUI =  (GUI_size) * (difference / 40);
+            let posy = this.height * 0.5 + differenceGUI;
+            this.ctx.beginPath();
 
-        this.ctx.stroke();
+            if(posy >= scaleBeginnGraphic && posy <= scaleEndGraphic) {
+                //draw lines:
+                if (value % 10 == 0) {
+                    this.ctx.lineWidth = 12;
+                    this.ctx.moveTo(this.width * 0.1, posy);
+                    this.ctx.lineTo(this.width * 0.12, posy);
+                    if(posy >= scaleBeginnGraphic + textHeight * 0.4 &&  posy <= scaleEndGraphic - textHeight * 0.4) {
+                        this.ctx.fillText(Math.round(value), this.width * 0.057, posy + textHeight * 0.35);
+                    }
+                } else {
+                    this.ctx.lineWidth = 8;
+                    this.ctx.moveTo(this.width * 0.11, posy);
+                    this.ctx.lineTo(this.width * 0.12, posy);
+                }
+            }
+            this.ctx.stroke();
+        });
 
         //speed number box:
         this.ctx.fillStyle = '#000';
+        this.ctx.lineWidth = 6;
         this.ctx.beginPath();
         let boxheight = this.height * 0.08;
         let boxwidth = this.width * 0.15;
@@ -259,7 +288,7 @@ export default class PFD {
         this.ctx.lineTo(boxstartWidth, this.height * 0.5 + boxheight * 0.5);
         this.ctx.lineTo(boxstartWidth, this.height * 0.5 - boxheight * 0.5);
 
-        this.ctx.fill() 
+        this.ctx.fill()
         this.ctx.stroke();
 
         //text inside of box:

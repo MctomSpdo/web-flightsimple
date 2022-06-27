@@ -244,21 +244,21 @@ export default class PFD {
         levels.push(Math.floor(this.airspeed / 10) * 10 - 10);
         levels.push(Math.floor(this.airspeed / 10) * 10 - 15);
 
-        
+
 
         levels.forEach((value) => {
             let difference = this.airspeed - value;
-            let differenceGUI =  (GUI_size) * (difference / 40);
+            let differenceGUI = (GUI_size) * (difference / 40);
             let posy = this.height * 0.5 + differenceGUI;
             this.ctx.beginPath();
 
-            if(posy >= scaleBeginnGraphic && posy <= scaleEndGraphic) {
+            if (posy >= scaleBeginnGraphic && posy <= scaleEndGraphic) {
                 //draw lines:
                 if (value % 10 == 0) {
                     this.ctx.lineWidth = 12;
                     this.ctx.moveTo(this.width * 0.1, posy);
                     this.ctx.lineTo(this.width * 0.12, posy);
-                    if(posy >= scaleBeginnGraphic + textHeight * 0.4 &&  posy <= scaleEndGraphic - textHeight * 0.4) {
+                    if (posy >= scaleBeginnGraphic + textHeight * 0.4 && posy <= scaleEndGraphic - textHeight * 0.4) {
                         this.ctx.fillText(Math.round(value), this.width * 0.057, posy + textHeight * 0.35);
                     }
                 } else {
@@ -309,13 +309,56 @@ export default class PFD {
 
         //litte markings at top and bottom of primary rect:
         this.ctx.fillRect(this.width * 0.88, this.height * 0.20, this.width * 0.10, this.height * 0.6);
-        this.ctx.rect(this.width * 0.88, this.height * 0.20, this.width * 0.10, this.height * 0.6);
+        this.ctx.strokeRect(this.width * 0.88, this.height * 0.20, this.width * 0.10, this.height * 0.6);
 
         this.ctx.moveTo(this.width * 0.88, this.height * 0.20);
         this.ctx.lineTo(this.width * 0.85, this.height * 0.20);
         this.ctx.moveTo(this.width * 0.88, this.height * 0.80);
         this.ctx.lineTo(this.width * 0.85, this.height * 0.80);
         this.ctx.stroke();
+
+        //alt number box:
+        let boxheight = this.height * 0.06;
+        let boxwidth = this.width * 0.15;
+
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.fillStyle = '#000';
+        this.ctx.strokeStyle = '#fff700';
+        this.ctx.lineWidth = 6;
+
+        this.ctx.moveTo(this.width * 0.85, this.height * 0.5 - boxheight * 0.5);
+        this.ctx.lineTo(this.width * 0.92, this.height * 0.5 - boxheight * 0.5);
+        this.ctx.lineTo(this.width * 0.92, this.height * 0.5 - boxheight * 0.9);
+        this.ctx.lineTo(this.width * 0.98, this.height * 0.5 - boxheight * 0.9);
+        this.ctx.lineTo(this.width * 0.98, this.height * 0.5 + boxheight * 0.9);
+        this.ctx.lineTo(this.width * 0.92, this.height * 0.5 + boxheight * 0.9);
+        this.ctx.lineTo(this.width * 0.92, this.height * 0.5 + boxheight * 0.5);
+        this.ctx.lineTo(this.width * 0.85, this.height * 0.5 + boxheight * 0.5);
+
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        let fontSize = this.height * 0.05;
+        this.ctx.font = fontSize + 'px Calibri';
+        this.ctx.fillStyle = '#fff700';
+        this.ctx.textAlign = 'right';
+
+        let alt_num = Math.floor(this.altitude / 1000).toLocaleString('en-US', {
+            minimumIntegerDigits: 2,
+            useGrouping: false
+        });
+
+        let alt_num1 = Math.floor((this.altitude - Math.floor(this.altitude / 1000) * 1000) / 10 ).toLocaleString('en-US', {
+            minimumIntegerDigits: 2,
+            useGrouping: false
+        });
+
+        this.ctx.fillText(alt_num, this.width * 0.92, this.height * 0.5 + fontSize * 0.3);
+        this.ctx.fillText(alt_num1, this.width * 0.975, this.height * 0.5 + fontSize * 0.3);
+
+        this.ctx.restore();
+
     }
 
     #renderMiddleBody() {

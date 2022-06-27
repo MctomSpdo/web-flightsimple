@@ -189,11 +189,11 @@ export default class PFD {
         //values:
         renderHeight = this.height * 0.1;
         this.ctx.fillStyle = "#5882f3";
-        this.ctx.fillText(this.airspeed, lineSep * 0.5, renderHeight);
-        this.ctx.fillText(this.altitude, lineSep * 1.5, renderHeight);
-        this.ctx.fillText(this.heading, lineSep * 2.5, renderHeight);
-        this.ctx.fillText(this.bank, lineSep * 3.5, renderHeight);
-        this.ctx.fillText(this.autopilot, lineSep * 4.5, renderHeight);
+        this.ctx.fillText(Math.round(this.airspeed), lineSep * 0.5, renderHeight);
+        this.ctx.fillText(Math.round(this.altitude), lineSep * 1.5, renderHeight);
+        this.ctx.fillText(Math.round(this.heading), lineSep * 2.5, renderHeight);
+        this.ctx.fillText(Math.round(this.bank), lineSep * 3.5, renderHeight);
+        this.ctx.fillText(Math.round(this.autopilot), lineSep * 4.5, renderHeight);
         this.ctx.stroke();
     }
 
@@ -210,14 +210,36 @@ export default class PFD {
         this.ctx.lineWidth = 6;
 
         //primary rect:
-        this.ctx.fillRect(this.width * 0.02, this.height * 0.20, this.width * 0.10, this.height * 0.6);
-        this.ctx.rect(this.width * 0.02, this.height * 0.20, this.width * 0.10, this.height * 0.6);
+        this.ctx.fillRect(this.width * 0.02, this.height * 0.2, this.width * 0.10, this.height * 0.6);
+        this.ctx.rect(this.width * 0.02, this.height * 0.2, this.width * 0.10, this.height * 0.6);
 
         //litte markings at top and bottom of primary rect:
-        this.ctx.moveTo(this.width * 0.1, this.height * 0.20)
-        this.ctx.lineTo(this.width * 0.15, this.height * 0.20);
-        this.ctx.moveTo(this.width * 0.10, this.height * 0.80);
-        this.ctx.lineTo(this.width * 0.15, this.height * 0.80);
+        this.ctx.moveTo(this.width * 0.1, this.height * 0.2)
+        this.ctx.lineTo(this.width * 0.15, this.hseight * 0.2);
+        this.ctx.moveTo(this.width * 0.1, this.height * 0.8);
+        this.ctx.lineTo(this.width * 0.15, this.height * 0.8);
+        this.ctx.stroke();
+
+        //scale:
+        let scaleBeginnGraphic = this.height * 0.2;
+        let scaleEndGraphic = this.height * 0.6;
+
+        //put all levels to display into Array:
+        let levels = new Array();
+        levels.push(Math.ceil(this.airspeed / 10) * 10);
+        levels.push(Math.ceil(this.airspeed / 10) * 10 + 10);
+        levels.push(Math.floor(this.airspeed / 10) * 10);
+        levels.push(Math.floor(this.airspeed / 10) * 10 + 10);
+
+        this.ctx.beginPath();
+        levels.forEach((value) => {
+            let difference = this.airspeed - value;
+            let differenceGUI = ((scaleEndGraphic - scaleBeginnGraphic) / 40) * difference;
+            //draw lines:
+            this.ctx.moveTo(this.width * 0.1, this.height * 0.5 + differenceGUI);
+            this.ctx.lineTo(this.width * 0.12, this.height * 0.5 + differenceGUI);
+        });
+
         this.ctx.stroke();
 
         //speed number box:
@@ -243,7 +265,7 @@ export default class PFD {
         //text inside of box:
         this.ctx.fillStyle = '#fff';
         this.ctx.font = fontSize + 'px Calibri';
-        this.ctx.fillText(this.airspeed, boxstartWidth + boxwidth * 0.4, this.height * 0.5 + fontSize * 0.3);
+        this.ctx.fillText(Math.round(this.airspeed), boxstartWidth + boxwidth * 0.4, this.height * 0.5 + fontSize * 0.3);
     }
 
     #renderRightBody() {

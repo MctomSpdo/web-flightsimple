@@ -3,7 +3,6 @@ import PFD from "./pfd.js";
 const canvas = document.getElementById("renderCanvas"); // Get the canvas element
 const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
 
-console.log(document.getElementById('PFD-js'));
 let pfd = new PFD(document.getElementById('PFD-js'));
 pfd.render();
 
@@ -216,7 +215,6 @@ engine.runRenderLoop(function () {
     //calculte numbers:
     airspeedMPH = (airspeed / 3) * 150;
     plane_pitchDEG = ((plane_pitch % 6) / 6) * 360
-    console.log(plane_pitchDEG);
     
 
     if(plane) {
@@ -324,11 +322,11 @@ window.addEventListener("resize", function () {
 });
 
 function updatePFD() {
-    pfd.airspeed = Math.round(airspeedMPH);
-    pfd.altitude = Math.round(altitude);
-    pfd.heading = Math.round(heading);
-    pfd.bank = Math.round(angle);
-    pfd.pitch = Math.round(plane_pitchDEG);
+    pfd.airspeed = airspeedMPH;
+    pfd.altitude = altitude;
+    pfd.heading = heading;
+    pfd.bank = angle;
+    pfd.pitch = plane_pitchDEG;
     pfd.render();
 }
 

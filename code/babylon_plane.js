@@ -534,7 +534,7 @@ const scene = createScene(); //Call the createScene function
 scene.registerBeforeRender(() => {
     if (plane && !gameover) {
         skybox.position.x = plane.position.x;
-        skybox.position.y = plane.position.y;
+        skybox.position.z = plane.position.z;
 
 
         let meshes = scene.getActiveMeshes();

@@ -396,7 +396,6 @@ const STALLCONTROLDISABLER = 50;
 let ground
 let terrain
 
-
 function createScene() {
 
     // Scene and Camera
@@ -419,9 +418,7 @@ function createScene() {
 
     //The speed at which acceleration is halted 
     camera.maxCameraSpeed = 10;
-
-    //camera.attachControl(canvas, true);
-
+    camera.attachControl(canvas, true);
 
     // Lights
     let light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
@@ -432,7 +429,6 @@ function createScene() {
     light2.position = new BABYLON.Vector3(0, 5, 5);
     light2.intensity = 1.6;
 
-
     // Load plane character and play infinity animation
     BABYLON.SceneLoader.ImportMesh("", "https://models.babylonjs.com/", "aerobatic_plane.glb", scene, function (meshes) {
 
@@ -441,7 +437,7 @@ function createScene() {
         //Scale the model    
         plane.scaling.scaleInPlace(5);
         plane.position.z = -15;
-        plane.position.y = 50;
+        plane.position.y = 70;
 
         const planeAnim_idle = scene.getAnimationGroupByName("idle");
         planeAnim_idle.stop();
@@ -480,7 +476,6 @@ function createScene() {
     shadowGenerator.getShadowMap().renderList.push(plane);
 
     //terrain:
-
     var mapSubX = 1000;             // point number on X axis
     var mapSubZ = 800;              // point number on Z axis
     var seed = 1.3;                 // seed
@@ -572,7 +567,7 @@ const scene = createScene(); //Call the createScene function
 
 //collision detection: 
 scene.registerBeforeRender(() => {
-    if (plane) {
+    if (plane && !gameover) {
         let meshes = scene.getActiveMeshes();
         meshes.forEach((mesh) => {
             if (plane.id == mesh.id) {
@@ -582,6 +577,7 @@ scene.registerBeforeRender(() => {
                 //if mesh is the same as the plane mesh, don't count it
                 if (plane.id == mesh.id || mesh.id == 'aerobatic_plane.2') return;
                 gameOver("Crashed the Airplane!");
+                console.log(mesh);
             }
         });
 
@@ -745,7 +741,6 @@ function checkAlarm() {
 
     //check altitude
     if (plane && ground && terrain) {
-        console.log(terrain.getHeightFromMap(plane.position.x, plane.position.z));
         if (terrain.getHeightFromMap(plane.position.x, plane.position.z) + 50 >= plane.position.y) {
             warnings.enableWarningByName("terrain");
         } else {

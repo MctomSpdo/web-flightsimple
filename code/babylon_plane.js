@@ -394,6 +394,7 @@ const STALLCONTROLDISABLER = 50;
 
 //ground:
 let ground
+let terrain
 
 
 function createScene() {
@@ -425,7 +426,7 @@ function createScene() {
     // Lights
     let light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
     light.intensity = 0.2;
-    light.specular = BABYLON.Color3.Black(); 
+    light.specular = BABYLON.Color3.Black();
 
     let light2 = new BABYLON.DirectionalLight("dir01", new BABYLON.Vector3(0, -0.5, -1.0), scene);
     light2.position = new BABYLON.Vector3(0, 5, 5);
@@ -483,8 +484,8 @@ function createScene() {
     var mapSubX = 1000;             // point number on X axis
     var mapSubZ = 800;              // point number on Z axis
     var seed = 1.3;                 // seed
-    var noiseScale = 0.03;         // noise frequency
-    var elevationScale = 6.0;
+    var noiseScale = 0.0075;         // noise frequency
+    var elevationScale = 20.0;
     noise.seed(seed);
     var mapData = new Float32Array(mapSubX * mapSubZ * 3); // 3 float values per point : x, y and z
     var mapColors = new Float32Array(mapSubX * mapSubZ * 3); // x3 because 3 values per point : r, g, b
@@ -529,7 +530,7 @@ function createScene() {
 
         // Dynamic Terrain
         // ===============
-        var terrainSub = 500;               // 20 terrain subdivisions
+        var terrainSub = 600;               // 20 terrain subdivisions
         var params = {
             mapData: mapData,               // data map declaration : what data to use ?
             mapSubX: mapSubX,               // how are these data stored by rows and columns
@@ -537,7 +538,7 @@ function createScene() {
             mapColors: mapColors,
             terrainSub: terrainSub          // how many terrain subdivisions wanted
         }
-        var terrain = new BABYLON.DynamicTerrain("t", params, scene);
+        terrain = new BABYLON.DynamicTerrain("t", params, scene);
         terrain.mesh.material = terrainMaterial;
         terrain.useCustomVertexFunction = true;
         terrain.receiveShadows = true;
@@ -584,7 +585,7 @@ scene.registerBeforeRender(() => {
             }
         });
 
-        if(ground) {
+        if (ground) {
             ground.position.x = plane.position.x;
             ground.position.z = plane.position.z;
         }
@@ -736,16 +737,20 @@ function checkAlarm() {
         warnings.disableWarningByName('overspeed');
     }
 
-    if (altitude < 30) {
-        warnings.enableWarningByName('terrain');
-    } else {
-        warnings.disableWarningByName('terrain');
-    }
-
     if (angle > 45 || angle < -45) {
         warnings.enableWarningByName('bankangle');
     } else {
         warnings.disableWarningByName('bankangle');
+    }
+
+    //check altitude
+    if (plane && ground && terrain) {
+        console.log(terrain.getHeightFromMap(plane.position.x, plane.position.z));
+        if (terrain.getHeightFromMap(plane.position.x, plane.position.z) + 50 >= plane.position.y) {
+            warnings.enableWarningByName("terrain");
+        } else {
+            warnings.disableWarningByName('terrain');
+        }
     }
 }
 

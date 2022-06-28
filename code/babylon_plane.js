@@ -36,10 +36,14 @@ class Engine {
     getPower() {
         return this.active_power;
     }
+
+    destroy() {
+        this.active_power = 0;
+    }
 }
 
 let warnings = new WarningManager();
-warnings.addWarningsByName('speed', 'overspeed', 'terrain', 'bankangle', 'stall');
+warnings.addWarningsByName('speed', 'overspeed', 'terrain', 'bankangle', 'stall', 'autopilot-disconnect');
 
 
 let leftArrow = false;
@@ -74,6 +78,7 @@ let angle = 0;
 let altitude = 0;
 
 let touchdown = false;
+let gameover = false;
 
 //stall
 let stall = false;
@@ -169,10 +174,31 @@ function createScene() {
 
 const scene = createScene(); //Call the createScene function
 
+//collision detection: 
+scene.registerBeforeRender(() => {
+    if(!plane) {
+        return;
+    }
+    let meshes = scene.getActiveMeshes();
+    meshes.forEach((mesh) => {
+        if(plane.id == mesh.id) {
+            return;
+        }
+        if(plane.intersectsMesh(mesh)) {
+            //if mesh is the same as the plane mesh, don't count it
+            if(plane.id == mesh.id || mesh.id == 'aerobatic_plane.2') return;
+            gameOver("Crashed the Airplane!");
+        }
+    });
+});
 
 
 // Register a render loop to repeatedly render the scene
 engine.runRenderLoop(function () {
+    if(gameover) {
+        scene.render();
+        return;
+    }
 
     //calculte numbers:
     airspeedMPH = (airspeed / 3) * 150;
@@ -324,6 +350,22 @@ function checkAlarm() {
     }
 }
 
+function gameOver(message) {
+    gameover = true;
+    //reset plane values:
+    plane_bank = 0;
+    plane_pitch = 0;
+    plane_rotate_side = 0;
+    airspeed = 0;
+    airspeedMPH = 0;
+    altitude = 0;
+    plane_engine.destroy();
+    //update displays:
+    pfd.blackOut();
+    
+    //hide Plane:
+    plane.setEnabled(false);
+}
 
 
 
@@ -340,6 +382,7 @@ document.onkeyup = keyListenerUp;
 
 /* CHECK PRESSED KEY */
 function keyListenerDown(e){
+    if(gameover) return; //if game is over ignore key inputs
     if(e.keyCode >= 0 && e.keyCode < 120) {
         keys[e.keyCode] = true;
     }

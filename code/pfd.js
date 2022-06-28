@@ -23,9 +23,14 @@ export default class PFD {
     }
 
     render() {
+        this.#clearCanvas();
         this.#renderHorizon();
         this.#renderHeader();
         this.#renderBody();
+    }
+
+    blackOut() {
+        this.#clearCanvas();
     }
 
     #renderHorizon() {
@@ -401,5 +406,9 @@ export default class PFD {
         let alpha = 90 - angle;
         let a = width / 2;
         return a / Math.tan(alpha * Math.PI / 180);
+    }
+
+    #clearCanvas() {
+        this.ctx.clearRect(0, 0, this.width, this.height);
     }
 }

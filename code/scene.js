@@ -47,7 +47,7 @@ export function spawnSpheres(scene) {
 
 export function getFog(scene) {
     scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
-    scene.fogDensity = 0.0025;
+    scene.fogDensity = 0.002;
     scene.fogColor = new BABYLON.Color3(0.9, 0.9, 0.85);
     scene.fogStart = 120;
 }
@@ -55,7 +55,7 @@ export function getFog(scene) {
 export function getGround(scene, terrainTexture, terrainMaterial) {
     let boxMat = new BABYLON.StandardMaterial("groundMat");
     boxMat.diffuseTexture = terrainTexture;
-    let ground = BABYLON.Mesh.CreateGround("ground1", 2000, 2000, 0, scene);
+    let ground = BABYLON.Mesh.CreateGround("ground1", 5000, 5000, 0, scene);
     ground.checkCollisions = true;
     ground.material = terrainMaterial;
     ground.position.y = -10;
@@ -69,4 +69,19 @@ export function getTerrainTexture(scene) {
     terrainTexture.uScale = 4.0;
     terrainTexture.vScale = terrainTexture.uScale;
     return terrainTexture;
+}
+
+export function getSkyBox(scene) {
+    let skybox = BABYLON.Mesh.CreateBox("skyBox", 2000, scene);
+    let skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
+    skyboxMaterial.backFaceCulling = false;
+    skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("./files/textures/sky/clouds/skybox", scene);
+    skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+    skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+    skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+    skyboxMaterial.disableLighting = true;
+    skybox.applyFog = false;
+    skybox.material = skyboxMaterial;
+    skybox.infiniteDistance = true;
+    return skybox;
 }

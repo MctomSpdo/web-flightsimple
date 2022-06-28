@@ -1,6 +1,6 @@
 import PFD from "./pfd.js";
 import WarningManager, { Warning } from "./warning.js";
-import { getDefaultCamera, getFog, getGlobalLight, getGround, getSunLight, getTerrainTexture, spawnSpheres } from "./scene.js";
+import { getDefaultCamera, getFog, getGlobalLight, getGround, getSkyBox, getSunLight, getTerrainTexture, spawnSpheres } from "./scene.js";
 
 const canvas = document.getElementById("renderCanvas"); // Get the canvas element
 //prevent select lines:
@@ -401,6 +401,9 @@ let terrain
 let terrainTexture
 let terrainMaterial
 
+//skybox:
+let skybox;
+
 function createScene() {
 
     // Scene and Camera
@@ -443,9 +446,12 @@ function createScene() {
     var shadowGenerator = new BABYLON.ShadowGenerator(1024, light2);
     shadowGenerator.getShadowMap().renderList.push(plane);
 
+    //Skybox:
+    skybox = getSkyBox();
+
     //terrain:
     var mapSubX = 1000;             // point number on X axis
-    var mapSubZ = 1000;              // point number on Z axis
+    var mapSubZ = 1500;             // point number on Z axis
     var seed = 1.3;                 // seed
     var noiseScale = 0.0075;         // noise frequency
     var elevationScale = 20.0;
@@ -487,7 +493,7 @@ function createScene() {
 
         // Dynamic Terrain
         // ===============
-        var terrainSub = 600;               // 20 terrain subdivisions
+        var terrainSub = 700;               // 20 terrain subdivisions
         var params = {
             mapData: mapData,               // data map declaration : what data to use ?
             mapSubX: mapSubX,               // how are these data stored by rows and columns
@@ -499,6 +505,8 @@ function createScene() {
         terrain.mesh.material = terrainMaterial;
         terrain.useCustomVertexFunction = true;
         terrain.receiveShadows = true;
+        terrain.subToleranceX = 10;
+        terrain.subToleranceZ = 10;
 
         // user custom function
         terrain.updateVertex = function (vertex, i, j) {
@@ -510,6 +518,8 @@ function createScene() {
 
         terrain.update(true);
 
+        //Trees (https://www.babylonjs-playground.com/#YB006J#243)
+        
     }   // onload closing bracket
 
     //outside of renderDistance
@@ -523,6 +533,10 @@ const scene = createScene(); //Call the createScene function
 //collision detection: 
 scene.registerBeforeRender(() => {
     if (plane && !gameover) {
+        skybox.position.x = plane.position.x;
+        skybox.position.y = plane.position.y;
+
+
         let meshes = scene.getActiveMeshes();
         meshes.forEach((mesh) => {
             if (plane.id == mesh.id) {
@@ -530,7 +544,7 @@ scene.registerBeforeRender(() => {
             }
             if (plane.intersectsMesh(mesh)) {
                 //if mesh is the same as the plane mesh, don't count it
-                if (plane.id == mesh.id || mesh.id == 'aerobatic_plane.2') return;
+                if (plane.id == mesh.id || mesh.id == 'aerobatic_plane.2' || mesh.id == 'skyBox') return;
                 gameOver("Crashed the Airplane!");
                 if(DEBUG) {
                     console.info('Plane collided with: ')

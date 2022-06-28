@@ -2,6 +2,8 @@ import PFD from "./pfd.js";
 import WarningManager, { Warning } from "./warning.js";
 
 const canvas = document.getElementById("renderCanvas"); // Get the canvas element
+//prevent select lines:
+canvas.onselectstart = () => {return false;};
 const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
 
 //terrain imports: (https://playground.babylonjs.com/#FJNR5#826)
@@ -395,30 +397,19 @@ const STALLCONTROLDISABLER = 50;
 //ground:
 let ground
 let terrain
+let terrainTexture
+let terrainMaterial
 
 function createScene() {
 
     // Scene and Camera
-    let scene = new BABYLON.Scene(engine);
-
-    // This creates and initially positions a follow camera 	
+    let scene = new BABYLON.Scene(engine);	
     let camera = new BABYLON.FollowCamera("FollowCam", new BABYLON.Vector3(0, 5, 30), scene);
-
-    //The goal distance of camera from target
     camera.radius = 0.15;
-
-    // The goal height of camera above local origin (centre) of target
     camera.heightOffset = 2;
-
-    // The goal rotation of camera around local origin (centre) of target in x y plane
     camera.rotationOffset = 180;
-
-    //Acceleration of camera in moving from current to goal position
     camera.cameraAcceleration = 0.025;
-
-    //The speed at which acceleration is halted 
     camera.maxCameraSpeed = 10;
-    camera.attachControl(canvas, true);
 
     // Lights
     let light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
@@ -451,6 +442,8 @@ function createScene() {
 
     });
 
+    //spheres on the ground:
+
     for (let index = -50; index < 50; index++) {
         let sphere;
         sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 2, segments: 32 }, scene);
@@ -471,13 +464,19 @@ function createScene() {
         sphere.material.diffuseColor = BABYLON.Color3.Red();
     }
 
+    //fog:
+    scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
+    scene.fogDensity = 0.0025;
+    scene.fogColor = new BABYLON.Color3(0.9, 0.9, 0.85);
+    scene.fogStart = 120;
+
     //Shadows:
     var shadowGenerator = new BABYLON.ShadowGenerator(1024, light2);
     shadowGenerator.getShadowMap().renderList.push(plane);
 
     //terrain:
     var mapSubX = 1000;             // point number on X axis
-    var mapSubZ = 800;              // point number on Z axis
+    var mapSubZ = 1000;              // point number on Z axis
     var seed = 1.3;                 // seed
     var noiseScale = 0.0075;         // noise frequency
     var elevationScale = 20.0;
@@ -508,12 +507,12 @@ function createScene() {
     }
 
     // Texture and material
-    var terrain_texture_url = "https://www.babylonjs-playground.com/textures/ground.jpg";
-    var terrainTexture = new BABYLON.Texture(terrain_texture_url, scene);
+    let terrain_texture_url = "https://www.babylonjs-playground.com/textures/ground.jpg";
+    terrainTexture = new BABYLON.Texture(terrain_texture_url, scene);
     terrainTexture.uScale = 4.0;
     terrainTexture.vScale = terrainTexture.uScale;
 
-    var terrainMaterial = new BABYLON.StandardMaterial("tm", scene);
+    terrainMaterial = new BABYLON.StandardMaterial("tm", scene);
     terrainMaterial.diffuseTexture = terrainTexture;
     terrainMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
     //terrainMaterial.diffuseColor = BABYLON.Color3.Green();
@@ -741,7 +740,7 @@ function checkAlarm() {
 
     //check altitude
     if (plane && ground && terrain) {
-        if (terrain.getHeightFromMap(plane.position.x, plane.position.z) + 50 >= plane.position.y) {
+        if (terrain.getHeightFromMap(plane.position.x, plane.position.z) + 40 >= plane.position.y) {
             warnings.enableWarningByName("terrain");
         } else {
             warnings.disableWarningByName('terrain');

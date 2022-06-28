@@ -1,5 +1,6 @@
 import PFD from "./pfd.js";
 import WarningManager, { Warning } from "./warning.js";
+import { getDefaultCamera, getFog, getGlobalLight, getGround, getSunLight, getTerrainTexture, spawnSpheres } from "./scene.js";
 
 const canvas = document.getElementById("renderCanvas"); // Get the canvas element
 //prevent select lines:
@@ -351,31 +352,31 @@ class Engine {
     }
 }
 
+const DEBUG = false;
+const DRAG = 0.995;
+
 let warnings = new WarningManager();
 warnings.addWarningsByName('speed', 'overspeed', 'terrain', 'bankangle', 'stall', 'autopilot-disconnect');
 
-
+//arrows:
 let leftArrow = false;
 let rightArrow = false;
 let upArrow = false;
 let downArrow = false;
 let engine_up = false;
 let engine_down = false;
-
 let keys = new Array(120);
 
-let plane;
+//input sensitivity: 
+const STEERING_BANK = 0.02;
+const STEERING_PITCH = 0.01;
 
-//current plane movement multiplier:
+//plane:
+let plane;
 let plane_bank = 0;
 let plane_rotate_side = 0;
 let plane_pitch = 0;
 let plane_pitchDEG = 0;
-
-const STEERING_BANK = 0.02;
-const STEERING_PITCH = 0.01;
-
-const DRAG = 0.995;
 
 let airspeed = 2.0;
 let airspeedMPH = 150;
@@ -404,21 +405,11 @@ function createScene() {
 
     // Scene and Camera
     let scene = new BABYLON.Scene(engine);	
-    let camera = new BABYLON.FollowCamera("FollowCam", new BABYLON.Vector3(0, 5, 30), scene);
-    camera.radius = 0.15;
-    camera.heightOffset = 2;
-    camera.rotationOffset = 180;
-    camera.cameraAcceleration = 0.025;
-    camera.maxCameraSpeed = 10;
+    let camera = getDefaultCamera(scene);
 
     // Lights
-    let light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
-    light.intensity = 0.2;
-    light.specular = BABYLON.Color3.Black();
-
-    let light2 = new BABYLON.DirectionalLight("dir01", new BABYLON.Vector3(0, -0.5, -1.0), scene);
-    light2.position = new BABYLON.Vector3(0, 5, 5);
-    light2.intensity = 1.6;
+    let light = getGlobalLight(scene);
+    let light2 = getSunLight(scene);
 
     // Load plane character and play infinity animation
     BABYLON.SceneLoader.ImportMesh("", "https://models.babylonjs.com/", "aerobatic_plane.glb", scene, function (meshes) {
@@ -443,32 +434,10 @@ function createScene() {
     });
 
     //spheres on the ground:
-
-    for (let index = -50; index < 50; index++) {
-        let sphere;
-        sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 2, segments: 32 }, scene);
-        sphere.position.y = 0;
-        sphere.position.z = 20 * index;
-        let groundMaterial = new BABYLON.StandardMaterial("Ground Material", scene);
-        sphere.material = groundMaterial;
-        sphere.material.diffuseColor = BABYLON.Color3.Yellow();
-        sphere.checkCollisions = true;
-    }
-    for (let index = -50; index < 50; index++) {
-        let sphere;
-        sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 2, segments: 32 }, scene);
-        sphere.position.y = 0;
-        sphere.position.x = 20 * index;
-        let groundMaterial = new BABYLON.StandardMaterial("Ground Material", scene);
-        sphere.material = groundMaterial;
-        sphere.material.diffuseColor = BABYLON.Color3.Red();
-    }
+    spawnSpheres(scene);
 
     //fog:
-    scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
-    scene.fogDensity = 0.0025;
-    scene.fogColor = new BABYLON.Color3(0.9, 0.9, 0.85);
-    scene.fogStart = 120;
+    getFog(scene);
 
     //Shadows:
     var shadowGenerator = new BABYLON.ShadowGenerator(1024, light2);
@@ -507,17 +476,11 @@ function createScene() {
     }
 
     // Texture and material
-    let terrain_texture_url = "https://www.babylonjs-playground.com/textures/ground.jpg";
-    terrainTexture = new BABYLON.Texture(terrain_texture_url, scene);
-    terrainTexture.uScale = 4.0;
-    terrainTexture.vScale = terrainTexture.uScale;
-
+    terrainTexture = getTerrainTexture(scene);
     terrainMaterial = new BABYLON.StandardMaterial("tm", scene);
     terrainMaterial.diffuseTexture = terrainTexture;
     terrainMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
-    //terrainMaterial.diffuseColor = BABYLON.Color3.Green();
-    //terrainMaterial.alpha = 0.8;
-    //terrainMaterial.wireframe = true;
+    terrainMaterial.wireframe = DEBUG;
 
     // wait for dynamic terrain extension to be loaded
     terrain_script.onload = function () {
@@ -550,17 +513,10 @@ function createScene() {
     }   // onload closing bracket
 
     //outside of renderDistance
-    let boxMat = new BABYLON.StandardMaterial("groundMat");
-    boxMat.diffuseTexture = terrainTexture;
-    ground = BABYLON.Mesh.CreateGround("ground1", 2000, 2000, 0, scene);
-    ground.checkCollisions = true;
-    ground.material = terrainMaterial;
-    ground.position.y = -10;
-    ground.receiveShadows = true;
+    ground = getGround(scene, terrainTexture, terrainMaterial);
 
     return scene;
 };
-
 
 const scene = createScene(); //Call the createScene function
 
@@ -576,7 +532,10 @@ scene.registerBeforeRender(() => {
                 //if mesh is the same as the plane mesh, don't count it
                 if (plane.id == mesh.id || mesh.id == 'aerobatic_plane.2') return;
                 gameOver("Crashed the Airplane!");
-                console.log(mesh);
+                if(DEBUG) {
+                    console.info('Plane collided with: ')
+                    console.info(mesh)
+                }
             }
         });
 
@@ -640,7 +599,6 @@ engine.runRenderLoop(function () {
         } else {
             plane_pitch -= STEERING_PITCH;
         }
-
     }
     if (downArrow) {
         if (stall) {
@@ -648,14 +606,10 @@ engine.runRenderLoop(function () {
         } else {
             plane_pitch += STEERING_PITCH;
         }
+    }
 
-    }
-    if (engine_up) {
-        plane_engine.powerUp();
-    }
-    if (engine_down) {
-        plane_engine.powerDown();
-    }
+    (engine_down) ? plane_engine.powerDown() : null;
+    (engine_up) ? plane_engine.powerUp() : null;
 
     //slow down airspeed by default:
     airspeed *= DRAG;
@@ -675,10 +629,7 @@ engine.runRenderLoop(function () {
         airspeed -= plane_pitch * 0.01;
     }
 
-
-    if (airspeed < 0) {
-        airspeed = 0;
-    }
+    airspeed = (airspeed < 0) ? 0 : airspeed;
 
 
     /* fly forward */
@@ -714,37 +665,14 @@ function updatePFD() {
 }
 
 function checkAlarm() {
-    if (stall) {
-        warnings.enableWarningByName('stall');
-    } else {
-        warnings.disableWarningByName('stall');
-    }
-
-    if (airspeedMPH < 70 && !stall) {
-        warnings.enableWarningByName('speed');
-    } else {
-        warnings.disableWarningByName('speed');
-    }
-
-    if (airspeedMPH > 200) {
-        warnings.enableWarningByName('overspeed');
-    } else {
-        warnings.disableWarningByName('overspeed');
-    }
-
-    if (angle > 45 || angle < -45) {
-        warnings.enableWarningByName('bankangle');
-    } else {
-        warnings.disableWarningByName('bankangle');
-    }
+    warnings.warn('stall', stall);
+    warnings.warn('overspeed', (airspeedMPH > 200));
+    warnings.warn('speed', (airspeedMPH < 70 && !stall));
+    warnings.warn('bankangle', (angle > 45 || angle < -45));
 
     //check altitude
     if (plane && ground && terrain) {
-        if (terrain.getHeightFromMap(plane.position.x, plane.position.z) + 40 >= plane.position.y) {
-            warnings.enableWarningByName("terrain");
-        } else {
-            warnings.disableWarningByName('terrain');
-        }
+        warnings.warn('terrain', (terrain.getHeightFromMap(plane.position.x, plane.position.z) + 40 >= plane.position.y));
     }
 }
 
@@ -776,7 +704,6 @@ function gameOver(message) {
 
 document.onkeydown = keyListenerDown;
 document.onkeyup = keyListenerUp;
-
 
 /* CHECK PRESSED KEY */
 function keyListenerDown(e) {

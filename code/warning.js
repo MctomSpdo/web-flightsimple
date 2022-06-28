@@ -48,6 +48,14 @@ export default class WarningManager {
         return true;
     }
 
+    warn(name, boolean) {
+        let warning = this.warnings.get(name.toLowerCase());
+        if (warning == undefined) return false;
+        if(boolean) warning.enable();
+        else warning.disable();
+        return true;
+    }
+
     disableWarningByName(name) {
         let warning = this.warnings.get(name.toLowerCase());
         if (warning == undefined) return false;

@@ -1,6 +1,6 @@
 import PFD from "./pfd.js";
 import WarningManager, { Warning } from "./warning.js";
-import { getDefaultCamera, getFog, getGlobalLight, getGround, getSkyBox, getSunLight, getTerrainTexture, spawnSpheres, spawnTrees } from "./scene.js";
+import { getKillKamera, explostion, getDefaultCamera, getFog, getGlobalLight, getGround, getObjectCameraLookingOn, getSkyBox, getSunLight, getTerrainTexture, spawnSpheres, spawnTrees } from "./scene.js";
 
 const canvas = document.getElementById("renderCanvas"); // Get the canvas element
 //prevent select lines:
@@ -423,15 +423,15 @@ function createScene() {
         plane.position.z = -15;
         plane.position.y = 50;
 
-        const planeAnim_idle = scene.getAnimationGroupByName("idle");
-        planeAnim_idle.stop();
+        //const planeAnim_idle = scene.getAnimationGroupByName("idle");
+        //planeAnim_idle.stop();
         //planeAnim_idle.start(true, 0.25, planeAnim_idle.from, planeAnim_idle.to, false); // slow
-        planeAnim_idle.start(true, 1, planeAnim_idle.from, planeAnim_idle.to, false); // full speed
+        //planeAnim_idle.start(true, 1, planeAnim_idle.from, planeAnim_idle.to, false); // full speed
 
-        if(DEBUG) {
+        if (DEBUG) {
             var skeletonViewer = new BABYLON.Debug.SkeletonViewer(skeletons[0], meshes[0], scene);
-		    skeletonViewer.isEnabled = true; // Enable it
-		    skeletonViewer.color = BABYLON.Color3.Red(); // Change default color from white to red
+            skeletonViewer.isEnabled = true; // Enable it
+            skeletonViewer.color = BABYLON.Color3.Red(); // Change default color from white to red
         }
 
         /*****************SET TARGET FOR CAMERA************************/
@@ -509,6 +509,7 @@ function createScene() {
         terrain.subToleranceX = 10;
         terrain.subToleranceZ = 10;
         terrain.initialLOD = 8;
+        terrain.isPickable = true;
 
         // user custom function
         terrain.updateVertex = function (vertex, i, j) {
@@ -540,20 +541,20 @@ scene.registerBeforeRender(() => {
 
 
         let meshes = scene.getActiveMeshes();
-         meshes.forEach((mesh) => {
-             if (plane.id == mesh.id) {
-                 return;
-             }
-             if (plane.intersectsMesh(mesh)) {
-                 //if mesh is the same as the plane mesh, don't count it
-                 if (plane.id == mesh.id || mesh.id == 'aerobatic_plane.2' || mesh.id == 'skyBox') return;
-                 gameOver("Crashed the Airplane!");
-                 if (DEBUG) {
-                     console.info('Plane collided with: ')
-                     console.info(mesh)
-                 }
-             }
-         });
+        meshes.forEach((mesh) => {
+            if (plane.id == mesh.id) {
+                return;
+            }
+            if (plane.intersectsMesh(mesh)) {
+                //if mesh is the same as the plane mesh, don't count it
+                if (plane.id == mesh.id || mesh.id == 'aerobatic_plane.2' || mesh.id == 'skyBox') return;
+                gameOver("Crashed the Airplane!");
+                if (DEBUG) {
+                    console.info('Plane collided with: ')
+                    console.info(mesh)
+                }
+            }
+        });
 
         if (ground) {
             ground.position.x = plane.position.x;
@@ -693,7 +694,19 @@ function checkAlarm() {
 }
 
 function gameOver(message) {
+    if(gameover) return;
     gameover = true;
+
+    //get position for explosion:
+    let pickResult = getObjectCameraLookingOn(scene);
+
+    //change camera:
+    scene.activeCamera = getKillKamera(scene, plane);
+
+    //hide Plane and explostion:
+    plane.setEnabled(false);
+    explostion(scene, pickResult.pickedPoint.clone());
+    
     //reset plane values:
     plane_bank = 0;
     plane_pitch = 0;
@@ -705,8 +718,7 @@ function gameOver(message) {
     //update displays:
     pfd.blackOut();
 
-    //hide Plane:
-    plane.setEnabled(false);
+    
 }
 
 

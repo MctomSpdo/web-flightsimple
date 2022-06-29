@@ -47,7 +47,7 @@ export function spawnSpheres(scene) {
 
 export function getFog(scene) {
     scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
-    scene.fogDensity = 0.0001;
+    scene.fogDensity = 0.0003;
     scene.fogColor = new BABYLON.Color3(0.9, 0.9, 0.85);
     scene.fogStart = 120;
 }
@@ -122,4 +122,29 @@ export function spawnTrees(scene, terrain, shadowGenerator, camera) {
         camera.applyGravity = true;
     });
     return instances;
+}
+
+export function explostion(scene, position) {
+    BABYLON.ParticleHelper.CreateAsync("explosion", scene).then((set) => {
+        set.systems.forEach(s => {
+            s.disposeOnStop = true;
+        });
+        set.start(position);
+    });
+}
+
+/**
+ * get the mesh that the camera is currently looking at
+ * @param {*} camera 
+ */
+export function getObjectCameraLookingOn(scene) {
+    return scene.pickWithRay(scene.activeCamera.getForwardRay(800));
+}
+
+export function getKillKamera(scene, plane ) {
+    let killCam = new BABYLON.UniversalCamera("KillCam", new BABYLON.Vector3(plane.position.x, plane.position.y, plane.position.z));
+    let oldCam = scene.activeCamera;
+    killCam.position = oldCam.position.clone();
+    killCam.rotation = oldCam.rotation.clone();
+    return killCam;
 }

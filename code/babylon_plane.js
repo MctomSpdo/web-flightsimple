@@ -1,10 +1,10 @@
 import PFD from "./pfd.js";
 import WarningManager, { Warning } from "./warning.js";
-import { getDefaultCamera, getFog, getGlobalLight, getGround, getSkyBox, getSunLight, getTerrainTexture, spawnSpheres } from "./scene.js";
+import { getDefaultCamera, getFog, getGlobalLight, getGround, getSkyBox, getSunLight, getTerrainTexture, spawnSpheres, spawnTrees } from "./scene.js";
 
 const canvas = document.getElementById("renderCanvas"); // Get the canvas element
 //prevent select lines:
-canvas.onselectstart = () => {return false;};
+canvas.onselectstart = () => { return false; };
 const engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
 
 //terrain imports: (https://playground.babylonjs.com/#FJNR5#826)
@@ -407,7 +407,7 @@ let skybox;
 function createScene() {
 
     // Scene and Camera
-    let scene = new BABYLON.Scene(engine);	
+    let scene = new BABYLON.Scene(engine);
     let camera = getDefaultCamera(scene);
 
     // Lights
@@ -415,20 +415,24 @@ function createScene() {
     let light2 = getSunLight(scene);
 
     // Load plane character and play infinity animation
-    BABYLON.SceneLoader.ImportMesh("", "https://models.babylonjs.com/", "aerobatic_plane.glb", scene, function (meshes) {
-
+    BABYLON.SceneLoader.ImportMesh("", "https://models.babylonjs.com/", "aerobatic_plane.glb", scene, function (meshes, particleSystems, skeletons) {
         plane = meshes[0];
 
         //Scale the model    
         plane.scaling.scaleInPlace(5);
         plane.position.z = -15;
-        plane.position.y = 70;
+        plane.position.y = 50;
 
         const planeAnim_idle = scene.getAnimationGroupByName("idle");
         planeAnim_idle.stop();
         //planeAnim_idle.start(true, 0.25, planeAnim_idle.from, planeAnim_idle.to, false); // slow
         planeAnim_idle.start(true, 1, planeAnim_idle.from, planeAnim_idle.to, false); // full speed
 
+        if(DEBUG) {
+            var skeletonViewer = new BABYLON.Debug.SkeletonViewer(skeletons[0], meshes[0], scene);
+		    skeletonViewer.isEnabled = true; // Enable it
+		    skeletonViewer.color = BABYLON.Color3.Red(); // Change default color from white to red
+        }
 
         /*****************SET TARGET FOR CAMERA************************/
         camera.lockedTarget = plane;
@@ -450,9 +454,10 @@ function createScene() {
     skybox = getSkyBox();
 
     //terrain:
-    var mapSubX = 1000;             // point number on X axis
-    var mapSubZ = 1500;             // point number on Z axis
-    var seed = 1.3;                 // seed
+    var mapSubX = 100;             // point number on X axis
+    var mapSubZ = 150;             // point number on Z axis
+    var seed = Math.random() * 1000000// seed
+    console.log("SEED: " + seed);
     var noiseScale = 0.0075;         // noise frequency
     var elevationScale = 20.0;
     noise.seed(seed);
@@ -475,12 +480,9 @@ function createScene() {
             mapColors[3 * (l * mapSubX + w)] = (0.5 + Math.random() * 0.2);
             mapColors[3 * (l * mapSubX + w) + 1] = (0.5 + Math.random() * 0.4);
             mapColors[3 * (l * mapSubX + w) + 2] = (0.5);
-
             //path.push(new BABYLON.Vector3(x, y, z));
         }
-        //paths.push(path);
     }
-
     // Texture and material
     terrainTexture = getTerrainTexture(scene);
     terrainMaterial = new BABYLON.StandardMaterial("tm", scene);
@@ -490,16 +492,15 @@ function createScene() {
 
     // wait for dynamic terrain extension to be loaded
     terrain_script.onload = function () {
-
         // Dynamic Terrain
         // ===============
-        var terrainSub = 700;               // 20 terrain subdivisions
+        var terrainSub = 600;               // 20 terrain subdivisions
         var params = {
             mapData: mapData,               // data map declaration : what data to use ?
             mapSubX: mapSubX,               // how are these data stored by rows and columns
             mapSubZ: mapSubZ,
-            mapColors: mapColors,
-            terrainSub: terrainSub          // how many terrain subdivisions wanted
+            mapColors: mapColors,           //color map for terrain (hihger up means different color)
+            terrainSub: terrainSub,         // how many terrain subdivisions wanted
         }
         terrain = new BABYLON.DynamicTerrain("t", params, scene);
         terrain.mesh.material = terrainMaterial;
@@ -507,6 +508,7 @@ function createScene() {
         terrain.receiveShadows = true;
         terrain.subToleranceX = 10;
         terrain.subToleranceZ = 10;
+        terrain.initialLOD = 8;
 
         // user custom function
         terrain.updateVertex = function (vertex, i, j) {
@@ -518,8 +520,8 @@ function createScene() {
 
         terrain.update(true);
 
-        //Trees (https://www.babylonjs-playground.com/#YB006J#243)
-        
+        // Trees
+        spawnTrees(scene, terrain, shadowGenerator, camera);
     }   // onload closing bracket
 
     //outside of renderDistance
@@ -533,25 +535,25 @@ const scene = createScene(); //Call the createScene function
 //collision detection: 
 scene.registerBeforeRender(() => {
     if (plane && !gameover) {
-        skybox.position.x = plane.position.x;
-        skybox.position.z = plane.position.z;
+        /*skybox.position.x = plane.position.x * 0.5;
+        skybox.position.z = plane.position.z * 0.5; */
 
 
         let meshes = scene.getActiveMeshes();
-        meshes.forEach((mesh) => {
-            if (plane.id == mesh.id) {
-                return;
-            }
-            if (plane.intersectsMesh(mesh)) {
-                //if mesh is the same as the plane mesh, don't count it
-                if (plane.id == mesh.id || mesh.id == 'aerobatic_plane.2' || mesh.id == 'skyBox') return;
-                gameOver("Crashed the Airplane!");
-                if(DEBUG) {
-                    console.info('Plane collided with: ')
-                    console.info(mesh)
-                }
-            }
-        });
+         meshes.forEach((mesh) => {
+             if (plane.id == mesh.id) {
+                 return;
+             }
+             if (plane.intersectsMesh(mesh)) {
+                 //if mesh is the same as the plane mesh, don't count it
+                 if (plane.id == mesh.id || mesh.id == 'aerobatic_plane.2' || mesh.id == 'skyBox') return;
+                 gameOver("Crashed the Airplane!");
+                 if (DEBUG) {
+                     console.info('Plane collided with: ')
+                     console.info(mesh)
+                 }
+             }
+         });
 
         if (ground) {
             ground.position.x = plane.position.x;

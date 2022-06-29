@@ -1,7 +1,7 @@
 export function getDefaultCamera(scene) {
     let camera = new BABYLON.FollowCamera("FollowCam", new BABYLON.Vector3(0, 5, 30), scene);
     camera.lowerRadiusLimit = 0.14;
-    camera.radius = 0.15;
+    camera.radius = 0.4;
     camera.heightOffset = 2;
     camera.rotationOffset = 180;
     camera.cameraAcceleration = 0.025;
@@ -47,7 +47,7 @@ export function spawnSpheres(scene) {
 
 export function getFog(scene) {
     scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
-    scene.fogDensity = 0.002;
+    scene.fogDensity = 0.0001;
     scene.fogColor = new BABYLON.Color3(0.9, 0.9, 0.85);
     scene.fogStart = 120;
 }
@@ -55,7 +55,7 @@ export function getFog(scene) {
 export function getGround(scene, terrainTexture, terrainMaterial) {
     let boxMat = new BABYLON.StandardMaterial("groundMat");
     boxMat.diffuseTexture = terrainTexture;
-    let ground = BABYLON.Mesh.CreateGround("ground1", 5000, 5000, 0, scene);
+    let ground = BABYLON.Mesh.CreateGround("ground1", 50000, 50000, 0, scene);
     ground.checkCollisions = true;
     ground.material = terrainMaterial;
     ground.position.y = -10;
@@ -65,14 +65,14 @@ export function getGround(scene, terrainTexture, terrainMaterial) {
 
 export function getTerrainTexture(scene) {
     const terrain_texture_url = "https://www.babylonjs-playground.com/textures/ground.jpg";
-    let terrainTexture =  new BABYLON.Texture(terrain_texture_url, scene);
+    let terrainTexture = new BABYLON.Texture(terrain_texture_url, scene);
     terrainTexture.uScale = 4.0;
     terrainTexture.vScale = terrainTexture.uScale;
     return terrainTexture;
 }
 
 export function getSkyBox(scene) {
-    let skybox = BABYLON.Mesh.CreateBox("skyBox", 5000, scene);
+    let skybox = BABYLON.Mesh.CreateBox("skyBox", 50000, scene);
     let skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
     skyboxMaterial.backFaceCulling = false;
     skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("./files/textures/sky/clouds/skybox", scene);
@@ -84,4 +84,42 @@ export function getSkyBox(scene) {
     skybox.material = skyboxMaterial;
     skybox.infiniteDistance = true;
     return skybox;
+}
+
+export function spawnTrees(scene, terrain, shadowGenerator, camera) {
+    let instances = new Array();
+    BABYLON.SceneLoader.ImportMesh("", "//www.babylonjs.com/assets/Tree/", "tree.babylon", scene, function (newMeshes) {
+        newMeshes[0].material.opacityTexture = null;
+        newMeshes[0].material.backFaceCulling = false;
+        newMeshes[0].isVisible = true;
+        newMeshes[0].position.y = terrain.getHeightFromMap(0, 0); // Getting height from ground object
+        newMeshes[0].scaling.scaleInPlace(5);
+
+        shadowGenerator.getShadowMap().renderList.push(newMeshes[0]);
+        var range = 10000;
+        var count = 1000;
+        for (var index = 0; index < count; index++) {
+            var newInstance = newMeshes[0].createInstance("i" + index);
+            var x = range / 2 - Math.random() * range;
+            var z = range / 2 - Math.random() * range;
+
+            var y = terrain.getHeightFromMap(x, z) - 2; // Getting height from ground object
+
+            newInstance.position = new BABYLON.Vector3(x, y, z);
+
+            newInstance.rotate(BABYLON.Axis.Y, Math.random() * Math.PI * 2, BABYLON.Space.WORLD);
+
+            var scale = 0.5 + Math.random() * 2;
+            newInstance.scaling.addInPlace(new BABYLON.Vector3(scale, scale, scale));
+
+            shadowGenerator.getShadowMap().renderList.push(newInstance);
+            instances.push(newInstance);
+        }
+        shadowGenerator.usePoissonSampling = true;
+
+        // Collisions
+        camera.checkCollisions = true;
+        camera.applyGravity = true;
+    });
+    return instances;
 }

@@ -451,7 +451,7 @@ function createScene() {
     shadowGenerator.getShadowMap().renderList.push(plane);
 
     //Skybox:
-    skybox = getSkyBox();
+    skybox = getSkyBox(scene);
 
     //terrain:
     var mapSubX = 100;             // point number on X axis
@@ -536,8 +536,8 @@ const scene = createScene(); //Call the createScene function
 //collision detection: 
 scene.registerBeforeRender(() => {
     if (plane && !gameover) {
-        /*skybox.position.x = plane.position.x * 0.5;
-        skybox.position.z = plane.position.z * 0.5; */
+        skybox.position.x = plane.position.x * 0.5;
+        skybox.position.z = plane.position.z * 0.5;
 
 
         let meshes = scene.getActiveMeshes();
@@ -697,16 +697,14 @@ function gameOver(message) {
     if(gameover) return;
     gameover = true;
 
-    //get position for explosion:
-    let pickResult = getObjectCameraLookingOn(scene);
-
     //change camera:
     scene.activeCamera = getKillKamera(scene, plane);
-
+    //get position for explosion:
+    let pickResult = getObjectCameraLookingOn(scene);
     //hide Plane and explostion:
     plane.setEnabled(false);
     explostion(scene, pickResult.pickedPoint.clone());
-    
+
     //reset plane values:
     plane_bank = 0;
     plane_pitch = 0;

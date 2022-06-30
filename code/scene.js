@@ -72,7 +72,7 @@ export function getTerrainTexture(scene) {
 }
 
 export function getSkyBox(scene) {
-    let skybox = BABYLON.Mesh.CreateBox("skyBox", 50000, scene);
+    let skybox = BABYLON.Mesh.CreateBox("skyBox", 12000, scene);
     let skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
     skyboxMaterial.backFaceCulling = false;
     skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("./files/textures/sky/clouds/skybox", scene);

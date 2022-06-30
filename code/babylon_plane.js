@@ -704,6 +704,9 @@ function gameOver(message) {
     //hide Plane and explostion:
     plane.setEnabled(false);
     explostion(scene, pickResult.pickedPoint.clone());
+    
+    //disable plane warnings:
+    warnings.disabelAllWarnigns();
 
     //reset plane values:
     plane_bank = 0;
@@ -715,11 +718,7 @@ function gameOver(message) {
     plane_engine.destroy();
     //update displays:
     pfd.blackOut();
-
-    
 }
-
-
 
 /*****************************************
  * KEYBOARD EVENTS

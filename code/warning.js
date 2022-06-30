@@ -62,6 +62,13 @@ export default class WarningManager {
         warning.disable();
         return true;
     }
+
+    disabelAllWarnigns() {
+        this.warnings.forEach((value, key) => {
+            let warning = value;
+            warning.disable();
+        });
+    }
 }
 
 export class Warning {
@@ -85,7 +92,7 @@ export class Warning {
     }
 
     disable() {
-        if (this.audio) {
+        if (this.active) {
             this.audio.pause();
             this.audio.currentTime = 0;
             this.active = false;

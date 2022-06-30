@@ -705,6 +705,18 @@ function gameOver(message) {
     plane.setEnabled(false);
     explostion(scene, pickResult.pickedPoint.clone());
     
+    if(Math.random() >= 0.5) {
+        let limit = 1 + Math.random() * 2
+        for(let i = 0; i < limit; i++) {
+            setTimeout(() => {
+                let pos = pickResult.pickedPoint.clone()
+                pos.x += Math.random() * 10;
+                pos.z += Math.random() * 10; 
+                explostion(scene, pos);
+            }, 100 * i)
+        }
+    }
+
     //disable plane warnings:
     warnings.disabelAllWarnigns();
 
